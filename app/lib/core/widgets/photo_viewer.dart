@@ -4,6 +4,7 @@ import '../theme/app_icons.dart';
 import '../theme/tokens.dart';
 import '../theme/typography.dart';
 import 'icon_circle_button.dart';
+import '../../l10n/strings.dart';
 
 class ViewerPhoto {
   const ViewerPhoto({required this.image, required this.caption, this.label});
@@ -62,7 +63,7 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Center(
-                      child: Text('Foto tidak bisa dimuat.', style: AppText.body.copyWith(color: AppColors.surface)),
+                      child: Text(context.s.photoLoadFailed, style: AppText.body.copyWith(color: AppColors.surface)),
                     );
                   }
                   final image = snapshot.data;
@@ -73,7 +74,7 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                       child: Image(
                         image: image,
                         fit: BoxFit.contain,
-                        semanticLabel: 'Foto bukti ${i + 1} dari ${widget.photos.length}',
+                        semanticLabel: context.s.proofPhotoOf(i + 1, widget.photos.length),
                       ),
                     ),
                   );
@@ -88,7 +89,7 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                 children: [
                   IconCircleButton(
                     icon: AppIcons.x,
-                    semanticLabel: 'Tutup foto',
+                    semanticLabel: context.s.closePhoto,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Spacer(),

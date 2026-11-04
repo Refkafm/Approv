@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../theme/tokens.dart';
+import '../../l10n/strings.dart';
 
 /// Indikator langkah (design.md 7.11): titik 8px bergaris ink; langkah aktif = pill 24×8.
 class StepDots extends StatelessWidget {
@@ -12,7 +13,7 @@ class StepDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Langkah ${index + 1} dari $count',
+      label: context.s.stepOf(index + 1, count),
       child: ExcludeSemantics(
         child: Row(
           mainAxisSize: MainAxisSize.min,

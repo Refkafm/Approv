@@ -9,6 +9,7 @@ import '../../data/app_exception.dart';
 import '../../data/models.dart';
 import '../shell/session.dart';
 import 'onboarding_scaffold.dart';
+import '../../l10n/strings.dart';
 
 /// Gabung keluarga dengan kode undangan (PRD A-04, M-02, Flow 2, layar A-1).
 /// Anak: sesi anonim dibuat otomatis, lalu buat PIN (opsional). Pengasuh: wajib sudah login.
@@ -39,7 +40,7 @@ class _JoinPageState extends State<JoinPage> {
     final session = SessionScope.read(context);
     final code = _code.text.trim().toUpperCase();
     if (code.length != 6) {
-      setState(() => _error = 'Kode terdiri dari 6 huruf/angka.');
+      setState(() => _error = context.s.joinCodeLength);
       return;
     }
     setState(() {
@@ -87,13 +88,13 @@ class _JoinPageState extends State<JoinPage> {
 
     if (joined != null) {
       return OnboardingScaffold(
-        title: 'Halo, ${joined.name}!',
-        subtitle: 'Buat PIN 4 angka supaya profilmu aman kalau HP dipakai bergantian.',
+        title: context.s.joinHello(joined.name),
+        subtitle: context.s.pinSubtitle,
         step: 1,
         stepCount: 2,
         children: [
           AppTextField(
-            label: 'PIN',
+            label: context.s.pinLabel,
             controller: _pin,
             hint: '••••',
             keyboardType: TextInputType.number,
@@ -105,10 +106,10 @@ class _JoinPageState extends State<JoinPage> {
             onSubmitted: (_) => _savePin(),
           ),
           const SizedBox(height: 20),
-          AppButton(label: _busy ? 'Menyimpan...' : 'Simpan PIN', onPressed: _busy ? null : _savePin),
+          AppButton(label: _busy ? context.s.saving : context.s.savePin, onPressed: _busy ? null : _savePin),
           const SizedBox(height: 12),
           AppButton(
-            label: 'Lewati dulu',
+            label: context.s.skipForNow,
             variant: AppButtonVariant.secondary,
             onPressed: _busy ? null : session.finishFlow,
           ),
@@ -119,16 +120,14 @@ class _JoinPageState extends State<JoinPage> {
 
     final isAdult = session.user != null && !session.user!.isAnonymous;
     return OnboardingScaffold(
-      title: 'Gabung keluarga',
-      subtitle: isAdult
-          ? 'Masukkan kode undangan dari pemilik keluarga.'
-          : 'Minta orang tua membuka tab Keluarga di HP-nya, lalu masukkan kodenya di sini.',
+      title: context.s.joinTitle,
+      subtitle: isAdult ? context.s.joinSubtitleAdult : context.s.joinSubtitleChild,
       step: isAdult ? null : 0,
       stepCount: isAdult ? null : 2,
       onBack: () => context.go(isAdult ? '/onboarding' : '/'),
       children: [
         AppTextField(
-          label: 'Kode undangan',
+          label: context.s.inviteCodeLabel,
           controller: _code,
           hint: 'K7M2QX',
           textCapitalization: TextCapitalization.characters,
@@ -145,15 +144,15 @@ class _JoinPageState extends State<JoinPage> {
         if (isAdult) ...[
           const SizedBox(height: 16),
           AppTextField(
-            label: 'Nama panggilanmu',
+            label: context.s.nicknameLabel,
             controller: _name,
-            hint: 'mis. Ayah',
+            hint: context.s.nicknameHintAdult,
             textCapitalization: TextCapitalization.words,
             maxLength: 40,
           ),
         ],
         const SizedBox(height: 20),
-        AppButton(label: _busy ? 'Memeriksa...' : 'Gabung', onPressed: _busy ? null : _join),
+        AppButton(label: _busy ? context.s.checking : context.s.joinButton, onPressed: _busy ? null : _join),
         FormError(_error),
       ],
     );

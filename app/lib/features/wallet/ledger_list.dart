@@ -7,6 +7,7 @@ import '../../core/theme/typography.dart';
 import '../../core/widgets/list_row_pill.dart';
 import '../../data/task_rules.dart';
 import '../../data/wallet_models.dart';
+import '../../l10n/strings.dart';
 
 /// Riwayat transaksi poin dikelompokkan per hari (P-02, layar A-9 & O-10).
 /// Baris di [reversible] (tugas otomatis ≤ 24 jam) bisa diketuk untuk dibatalkan.
@@ -21,15 +22,15 @@ class LedgerList extends StatelessWidget {
 
   static String _dayLabel(DateTime day, DateTime today) {
     final diff = dateOnly(today).difference(day).inDays;
-    if (diff == 0) return 'Hari ini';
-    if (diff == 1) return 'Kemarin';
+    if (diff == 0) return S.current.today;
+    if (diff == 1) return S.current.yesterday;
     return formatDateShort(day);
   }
 
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return Text('Belum ada transaksi poin.', style: AppText.body.copyWith(color: AppColors.inkMuted));
+      return Text(context.s.noTransactions, style: AppText.body.copyWith(color: AppColors.inkMuted));
     }
     final today = DateTime.now();
     final children = <Widget>[];
@@ -51,7 +52,7 @@ class LedgerList extends StatelessWidget {
         ..add(
           ListRowPill(
             title: e.title,
-            subtitle: [time, if (e.goalBucket) 'tabungan goal', if (canReverse) 'ketuk untuk membatalkan'].join(' · '),
+            subtitle: [time, if (e.goalBucket) context.s.goalSavings, if (canReverse) context.s.tapToUndo].join(' · '),
             leading: CircleBadge(
               color: e.amount >= 0 ? AppColors.pastelLime : AppColors.pastelPeach,
               icon: switch (e.type) {

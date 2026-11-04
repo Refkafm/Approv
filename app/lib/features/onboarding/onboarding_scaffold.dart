@@ -6,6 +6,8 @@ import '../../core/theme/typography.dart';
 import '../../core/widgets/icon_circle_button.dart';
 import '../../core/widgets/paper_background.dart';
 import '../../core/widgets/step_dots.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Kerangka layar onboarding: tombol kembali opsional, indikator langkah, judul display, isi.
 class OnboardingScaffold extends StatelessWidget {
@@ -32,14 +34,16 @@ class OnboardingScaffold extends StatelessWidget {
       body: PaperBackground(
         child: SafeArea(
           child: ListView(
+            // Ganti langkah = isi baru, kartu muncul lagi berurutan
+            key: ValueKey(title),
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 12, AppSpace.screenX, 32),
-            children: [
+            children: staggered([
               SizedBox(
                 height: TapTarget.parent,
                 child: Row(
                   children: [
                     if (onBack != null)
-                      IconCircleButton(icon: AppIcons.arrowLeft, semanticLabel: 'Kembali', onPressed: onBack),
+                      IconCircleButton(icon: AppIcons.arrowLeft, semanticLabel: context.s.back, onPressed: onBack),
                     const Spacer(),
                     if (step != null && stepCount != null) StepDots(count: stepCount!, index: step!),
                   ],
@@ -53,7 +57,7 @@ class OnboardingScaffold extends StatelessWidget {
               ],
               const SizedBox(height: 28),
               ...children,
-            ],
+            ]),
           ),
         ),
       ),

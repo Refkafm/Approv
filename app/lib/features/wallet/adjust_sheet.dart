@@ -11,6 +11,7 @@ import '../../data/app_exception.dart';
 import '../../data/models.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
+import '../../l10n/strings.dart';
 
 Future<bool?> _sheet(BuildContext context, Widget child) => showModalBottomSheet<bool>(
   context: context,
@@ -52,8 +53,8 @@ class _AdjustSheetState extends State<_AdjustSheet> {
   String? _error;
 
   List<String> get _quickReasons => widget.penalty
-      ? const ['Tidak menepati janji', 'Main melebihi waktu', 'Lupa tugas penting']
-      : const ['Bantu tanpa disuruh', 'Nilai bagus', 'Sikap baik hari ini'];
+      ? [context.s.penaltyBrokenPromise, context.s.penaltyOverTime, context.s.penaltyForgotTask]
+      : [context.s.bonusHelped, context.s.bonusGoodGrades, context.s.bonusGoodAttitude];
 
   int get _value => int.tryParse(_amount.text) ?? 0;
 
@@ -66,11 +67,11 @@ class _AdjustSheetState extends State<_AdjustSheet> {
 
   Future<void> _submit() async {
     if (_value <= 0) {
-      setState(() => _error = 'Isi jumlah poin dulu.');
+      setState(() => _error = context.s.amountRequired);
       return;
     }
     if (_reason.text.trim().isEmpty) {
-      setState(() => _error = 'Tulis alasannya. ${widget.member.name} akan melihat alasan ini.');
+      setState(() => _error = context.s.adjustReasonRequired(widget.member.name));
       return;
     }
     final session = SessionScope.read(context);
@@ -90,7 +91,7 @@ class _AdjustSheetState extends State<_AdjustSheet> {
       if (mounted) {
         setState(
           () => _error = e.code == 'insufficient_points'
-              ? 'Penalti melebihi saldo ${widget.member.name} (${formatPoints(widget.available)} poin).'
+              ? context.s.penaltyExceedsBalance(widget.member.name, formatPoints(widget.available))
               : e.message,
         );
       }
@@ -114,12 +115,12 @@ class _AdjustSheetState extends State<_AdjustSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.penalty ? 'Penalti untuk ${widget.member.name}' : 'Bonus untuk ${widget.member.name}',
+              widget.penalty ? context.s.penaltyFor(widget.member.name) : context.s.bonusFor(widget.member.name),
               style: AppText.titleLg,
             ),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Jumlah poin',
+              label: context.s.pointsAmountLabel,
               controller: _amount,
               hint: '50',
               keyboardType: TextInputType.number,
@@ -142,9 +143,9 @@ class _AdjustSheetState extends State<_AdjustSheet> {
             ),
             const SizedBox(height: 20),
             AppTextField(
-              label: 'Alasan',
+              label: context.s.reasonLabel,
               controller: _reason,
-              hint: widget.penalty ? 'mis. Main game lewat dari jatah' : 'mis. Bantu cuci mobil tanpa disuruh',
+              hint: widget.penalty ? context.s.penaltyReasonHint : context.s.bonusReasonHint,
               textCapitalization: TextCapitalization.sentences,
               maxLength: 200,
               maxLines: 2,
@@ -162,13 +163,13 @@ class _AdjustSheetState extends State<_AdjustSheet> {
             if (_value > 0) ...[
               const SizedBox(height: 16),
               Text(
-                'Saldo ${widget.member.name} jadi ${formatPoints(after)} poin.',
+                context.s.balanceBecomes(widget.member.name, formatPoints(after)),
                 style: AppText.body.copyWith(color: after < 0 ? AppColors.tangerineDeep : AppColors.inkMuted),
               ),
             ],
             const SizedBox(height: 20),
             AppButton(
-              label: _busy ? 'Menyimpan...' : (widget.penalty ? 'Beri penalti' : 'Beri bonus'),
+              label: _busy ? context.s.saving : (widget.penalty ? context.s.givePenalty : context.s.giveBonus),
               variant: widget.penalty ? AppButtonVariant.destructive : AppButtonVariant.primary,
               onPressed: _busy ? null : _submit,
             ),
@@ -203,7 +204,7 @@ class _ReverseSheetState extends State<_ReverseSheet> {
 
   Future<void> _submit() async {
     if (_reason.text.trim().isEmpty) {
-      setState(() => _error = 'Tulis alasannya supaya anak tahu kenapa dibatalkan.');
+      setState(() => _error = context.s.reverseReasonRequired);
       return;
     }
     final session = SessionScope.read(context);
@@ -235,25 +236,21 @@ class _ReverseSheetState extends State<_ReverseSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Batalkan "${widget.taskTitle}"?', style: AppText.titleLg),
+            Text(context.s.reverseTitle(widget.taskTitle), style: AppText.titleLg),
             const SizedBox(height: 8),
-            Text(
-              'Poin tugas ini ditarik kembali. Kalau poinnya sudah terpakai, saldo bisa jadi minus '
-              '(utang poin) dan lunas otomatis dari poin berikutnya.',
-              style: AppText.body.copyWith(color: AppColors.inkMuted),
-            ),
+            Text(context.s.reverseExplain, style: AppText.body.copyWith(color: AppColors.inkMuted)),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Alasan',
+              label: context.s.reasonLabel,
               controller: _reason,
-              hint: 'mis. Kasurnya belum dirapikan',
+              hint: context.s.reverseReasonHint,
               textCapitalization: TextCapitalization.sentences,
               maxLength: 200,
               maxLines: 2,
             ),
             const SizedBox(height: 20),
             AppButton(
-              label: _busy ? 'Menyimpan...' : 'Batalkan tugas',
+              label: _busy ? context.s.saving : context.s.reverseTask,
               variant: AppButtonVariant.destructive,
               onPressed: _busy ? null : _submit,
             ),

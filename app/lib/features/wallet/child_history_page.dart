@@ -12,6 +12,8 @@ import '../shell/reload_on_changes.dart';
 import '../shell/session.dart';
 import 'ledger_list.dart';
 import 'wallet_views.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Riwayat anak (PRD layar A-9, P-02): saldo, status penukaran hadiah, dan transaksi poin.
 class ChildHistoryPage extends StatefulWidget {
@@ -52,18 +54,20 @@ class _ChildHistoryPageState extends State<ChildHistoryPage> with ReloadOnChange
           final data = snapshot.data;
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-            children: [
-              Text('Riwayat', style: AppText.displayLg),
+            children: staggered([
+              Text(context.s.navHistory, style: AppText.displayLg),
               const SizedBox(height: 20),
               if (snapshot.hasError)
                 Text(
-                  snapshot.error is AppException ? (snapshot.error! as AppException).message : 'Gagal memuat riwayat.',
+                  snapshot.error is AppException
+                      ? (snapshot.error! as AppException).message
+                      : context.s.loadHistoryFailed,
                   style: AppText.body.copyWith(color: AppColors.tangerineDeep),
                 ),
               BalanceView(data?.$1),
               const SizedBox(height: 28),
               if (data != null && data.$3.isNotEmpty) ...[
-                Text('Penukaran hadiah', style: AppText.titleLg),
+                Text(context.s.rewardRedemptions, style: AppText.titleLg),
                 const SizedBox(height: 10),
                 for (final r in data.$3.take(10)) ...[
                   ListRowPill(
@@ -71,11 +75,11 @@ class _ChildHistoryPageState extends State<ChildHistoryPage> with ReloadOnChange
                     subtitle: [
                       formatReportTime(r.createdAt),
                       switch (r.status) {
-                        RedemptionStatus.requested => 'menunggu orang tua',
-                        RedemptionStatus.approved => 'disetujui',
-                        RedemptionStatus.fulfilled => 'sudah diberikan',
-                        RedemptionStatus.rejected => 'ditolak: ${r.rejectReason ?? '-'}',
-                        RedemptionStatus.cancelled => 'dibatalkan',
+                        RedemptionStatus.requested => context.s.statusWaitingParent,
+                        RedemptionStatus.approved => context.s.statusApproved,
+                        RedemptionStatus.fulfilled => context.s.statusGiven,
+                        RedemptionStatus.rejected => context.s.statusRejected(r.rejectReason ?? '-'),
+                        RedemptionStatus.cancelled => context.s.statusCancelled,
                       },
                     ].join(' · '),
                     leading: CircleBadge(color: AppColors.pastelLilac, icon: AppIcons.reward(r.rewardIcon)),
@@ -83,11 +87,11 @@ class _ChildHistoryPageState extends State<ChildHistoryPage> with ReloadOnChange
                   const SizedBox(height: 10),
                 ],
                 const SizedBox(height: 18),
-                Text('Transaksi poin', style: AppText.titleLg),
+                Text(context.s.pointTransactions, style: AppText.titleLg),
                 const SizedBox(height: 10),
               ],
               if (data != null) LedgerList(entries: data.$2),
-            ],
+            ]),
           );
         },
       ),

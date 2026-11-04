@@ -5,6 +5,7 @@ import '../theme/app_icons.dart';
 import '../format.dart';
 import '../theme/tokens.dart';
 import '../theme/typography.dart';
+import '../../l10n/strings.dart';
 
 /// Ikon mata uang "Bintang": bintang kuning bergaris ink.
 class PointStar extends StatelessWidget {
@@ -47,10 +48,10 @@ class PointsBalance extends StatelessWidget {
     final notes = <String>[
       if (inDebt) ...[
         ?debtReason,
-        'Akan lunas otomatis dari poin berikutnya.',
+        context.s.debtPaidAutomatically,
       ] else ...[
-        if (goalSaved > 0) '+ ${formatPoints(goalSaved)} di tabungan goal',
-        if (onHold > 0) '${formatPoints(onHold)} sedang ditukar',
+        if (goalSaved > 0) context.s.inGoalSavings(formatPoints(goalSaved)),
+        if (onHold > 0) context.s.beingRedeemed(formatPoints(onHold)),
       ],
     ];
 
@@ -60,12 +61,14 @@ class PointsBalance extends StatelessWidget {
       children: [
         Semantics(
           container: true,
-          label: inDebt ? 'Utang poin ${formatPoints(-available)}' : 'Saldo ${formatPoints(available)} poin',
+          label: inDebt
+              ? context.s.debtSemantic(formatPoints(-available))
+              : context.s.balanceSemantic(formatPoints(available)),
           child: ExcludeSemantics(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (inDebt) Text('Utang poin', style: AppText.titleMd.copyWith(color: AppColors.tangerineDeep)),
+                if (inDebt) Text(context.s.pointDebt, style: AppText.titleMd.copyWith(color: AppColors.tangerineDeep)),
                 Row(
                   children: [
                     const PointStar(),

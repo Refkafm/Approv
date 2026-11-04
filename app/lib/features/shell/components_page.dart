@@ -5,7 +5,7 @@ import '../../core/theme/app_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/theme/typography.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/dot_progress.dart';
+import '../../core/widgets/goal_progress_bar.dart';
 import '../../core/widgets/feature_card.dart';
 import '../../core/widgets/icon_circle_button.dart';
 import '../../core/widgets/list_row_pill.dart';
@@ -49,13 +49,13 @@ class ComponentsPage extends StatelessWidget {
             const SizedBox(height: 16),
             const PointsBalance(available: -10, debtReason: 'Tugas "Rapikan kasur" dibatalkan'),
             _section('Progress goal'),
-            const Wrap(
-              spacing: 24,
-              runSpacing: 16,
+            const Column(
               children: [
-                DotProgress(saved: 0, target: 5000, goalTitle: 'Contoh'),
-                DotProgress(saved: 3200, target: 5000, goalTitle: 'Contoh'),
-                DotProgress(saved: 5000, target: 5000, goalTitle: 'Contoh'),
+                GoalProgressBar(saved: 0, target: 5000, goalTitle: 'Contoh'),
+                SizedBox(height: 16),
+                GoalProgressBar(saved: 3200, target: 5000, goalTitle: 'Contoh'),
+                SizedBox(height: 16),
+                GoalProgressBar(saved: 5000, target: 5000, goalTitle: 'Contoh'),
               ],
             ),
             _section('Streak'),

@@ -17,6 +17,8 @@ import '../rewards/goal_card.dart';
 import '../shell/reload_on_changes.dart';
 import '../shell/session.dart';
 import '../wallet/wallet_views.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Beranda anak (PRD A-2, design.md 8): sapaan → saldo → shortcut → goal → streak → tugas hari ini.
 /// Saldo, goal, & streak ikut berubah saat orang tua menyetujui/memberi bonus (realtime).
@@ -60,15 +62,18 @@ class _ChildHomePageState extends State<ChildHomePage> with ReloadOnChanges {
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-        children: [
+        children: staggered([
           Row(
             children: [
               Expanded(
-                child: Text('Halo, ${SessionScope.of(context).activeMember?.name ?? ''}!', style: AppText.displayLg),
+                child: Text(
+                  context.s.joinHello(SessionScope.of(context).activeMember?.name ?? ''),
+                  style: AppText.displayLg,
+                ),
               ),
               IconCircleButton(
                 icon: AppIcons.gear,
-                semanticLabel: 'Pengaturan',
+                semanticLabel: context.s.settings,
                 tapTarget: TapTarget.child,
                 onPressed: () => _showSettings(context),
               ),
@@ -84,7 +89,7 @@ class _ChildHomePageState extends State<ChildHomePage> with ReloadOnChanges {
           StreakView(wallet),
           const SizedBox(height: 24),
           const _TodayTasksCard(),
-        ],
+        ]),
       ),
     );
   }
@@ -129,12 +134,12 @@ class _TodayTasksCardState extends State<_TodayTasksCard> with ReloadOnChanges {
         final remaining = todo.length;
         return FeatureCard(
           tone: FeatureCardTone.tangerine,
-          title: 'Tugas hari ini',
+          title: context.s.todayTasks,
           description: snapshot.connectionState != ConnectionState.done
               ? null
               : (today.isEmpty
-                    ? 'Belum ada tugas hari ini.'
-                    : (remaining == 0 ? 'Semua tugas beres. Keren!' : 'Tinggal $remaining tugas lagi, semangat!')),
+                    ? context.s.noTasksToday
+                    : (remaining == 0 ? context.s.allTasksDone : context.s.tasksLeft(remaining))),
           child: Column(
             children: [
               for (final item in todo.take(3)) ...[
@@ -171,15 +176,12 @@ Future<void> _showSettings(BuildContext context) {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Keluar dari HP ini?', style: AppText.titleLg),
+          Text(context.s.signOutDeviceTitle, style: AppText.titleLg),
           const SizedBox(height: 8),
-          Text(
-            'Poinmu tetap aman. Untuk masuk lagi, minta kode baru ke orang tua.',
-            style: AppText.body.copyWith(color: AppColors.inkMuted),
-          ),
+          Text(context.s.signOutChildNote, style: AppText.body.copyWith(color: AppColors.inkMuted)),
           const SizedBox(height: 20),
           AppButton(
-            label: 'Keluar',
+            label: context.s.signOut,
             variant: AppButtonVariant.destructive,
             onPressed: () {
               Navigator.of(sheetContext).pop();
@@ -188,7 +190,7 @@ Future<void> _showSettings(BuildContext context) {
           ),
           const SizedBox(height: 12),
           AppButton(
-            label: 'Batal',
+            label: context.s.cancel,
             variant: AppButtonVariant.secondary,
             onPressed: () => Navigator.of(sheetContext).pop(),
           ),
@@ -202,11 +204,11 @@ Future<void> _showSettings(BuildContext context) {
 class _Shortcuts extends StatelessWidget {
   const _Shortcuts();
 
-  static const _items = [
-    (label: 'Tugas', icon: AppIcons.listChecks, color: AppColors.pastelPeach, path: '/child/tasks'),
-    (label: 'Hadiah', icon: AppIcons.gift, color: AppColors.pastelLilac, path: '/child/rewards'),
-    (label: 'Goal', icon: AppIcons.flag, color: AppColors.pastelButter, path: '/child/rewards'),
-    (label: 'Riwayat', icon: AppIcons.clockCounterClockwise, color: AppColors.pastelSky, path: '/child/history'),
+  static List<({String label, IconData icon, Color color, String path})> _items(S s) => [
+    (label: s.tasks, icon: AppIcons.listChecks, color: AppColors.pastelPeach, path: '/child/tasks'),
+    (label: s.rewards, icon: AppIcons.gift, color: AppColors.pastelLilac, path: '/child/rewards'),
+    (label: s.goal, icon: AppIcons.flag, color: AppColors.pastelButter, path: '/child/rewards'),
+    (label: s.navHistory, icon: AppIcons.clockCounterClockwise, color: AppColors.pastelSky, path: '/child/history'),
   ];
 
   @override
@@ -216,7 +218,7 @@ class _Shortcuts extends StatelessWidget {
       clipBehavior: Clip.none,
       child: Row(
         children: [
-          for (final item in _items)
+          for (final item in _items(context.s))
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Pressable(

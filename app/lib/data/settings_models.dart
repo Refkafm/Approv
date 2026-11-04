@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart' show TimeOfDay;
 
+import '../l10n/strings.dart';
+
 /// Pengaturan keluarga (PRD R-02, layar O-14). Kolom mengikuti tabel families.
 class FamilySettings {
   const FamilySettings({
@@ -44,9 +46,9 @@ class FamilySettings {
 
   String? validate() {
     final n = name.trim();
-    if (n.isEmpty) return 'Isi nama keluarga.';
-    if (n.length > 60) return 'Nama keluarga maksimal 60 karakter.';
-    if (streakBonusPct < 0 || streakBonusPct > 100) return 'Bonus streak 0–100%.';
+    if (n.isEmpty) return S.current.familyNameRequired;
+    if (n.length > 60) return S.current.familyNameTooLong;
+    if (streakBonusPct < 0 || streakBonusPct > 100) return S.current.streakBonusRange;
     return null;
   }
 

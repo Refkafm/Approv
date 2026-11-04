@@ -12,6 +12,8 @@ import '../../data/app_exception.dart';
 import '../../data/models.dart';
 import '../shell/session.dart';
 import 'child_form.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Keluarga & anggota (PRD O-12, M-01, M-02): daftar anggota, tambah anak, kode undangan.
 class FamilyPage extends StatefulWidget {
@@ -61,17 +63,15 @@ class _FamilyPageState extends State<FamilyPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              InviteCodeCard(code: code, forName: child?.name ?? 'orang tua / pengasuh'),
+              InviteCodeCard(code: code, forName: child?.name ?? context.s.parentOrCaregiver),
               const SizedBox(height: 16),
               Text(
-                child != null
-                    ? 'Di HP ${child.name}: buka app, pilih "Saya anak", lalu masukkan kode ini.'
-                    : 'Di HP mereka: masuk dengan akun sendiri, lalu pilih "Punya kode undangan?".',
+                child != null ? context.s.inviteChildHint(child.name) : context.s.inviteAdultHint,
                 style: AppText.body,
               ),
               const SizedBox(height: 20),
               AppButton(
-                label: 'Tutup',
+                label: context.s.close,
                 variant: AppButtonVariant.secondary,
                 onPressed: () => Navigator.of(context).pop(),
               ),
@@ -100,10 +100,10 @@ class _FamilyPageState extends State<FamilyPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Tambah anak', style: AppText.titleLg),
+              Text(context.s.onbAddChildTitle, style: AppText.titleLg),
               const SizedBox(height: 16),
               ChildForm(
-                submitLabel: 'Simpan',
+                submitLabel: context.s.save,
                 onSubmit: (name, avatar, birthDate) async {
                   await _session.repository.addChild(
                     familyId: _me.familyId,
@@ -135,29 +135,29 @@ class _FamilyPageState extends State<FamilyPage> {
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-            children: [
-              Text('Keluarga', style: AppText.displayLg),
+            children: staggered([
+              Text(context.s.navFamily, style: AppText.displayLg),
               const SizedBox(height: 20),
               if (snapshot.hasError)
                 Text(
                   snapshot.error is AppException
                       ? (snapshot.error! as AppException).message
-                      : 'Gagal memuat anggota keluarga.',
+                      : context.s.loadMembersFailed,
                   style: AppText.body.copyWith(color: AppColors.tangerineDeep),
                 ),
-              Text('Anak', style: AppText.titleLg),
+              Text(context.s.children, style: AppText.titleLg),
               const SizedBox(height: 10),
               if (snapshot.connectionState == ConnectionState.done && children.isEmpty)
-                Text('Belum ada anak.', style: AppText.body.copyWith(color: AppColors.inkMuted)),
+                Text(context.s.noChildren, style: AppText.body.copyWith(color: AppColors.inkMuted)),
               for (final child in children) ...[
                 ListRowPill(
                   title: child.name,
-                  subtitle: child.isConnected ? 'Terhubung ke HP anak' : 'Belum terhubung ke HP anak',
+                  subtitle: child.isConnected ? context.s.connectedToChildPhone : context.s.notConnectedToChildPhone,
                   leading: MemberAvatar(name: child.name, avatarKey: child.avatar),
                   trailing: Padding(
                     padding: const EdgeInsets.only(right: 4),
                     child: AppButton(
-                      label: 'Kode',
+                      label: context.s.codeButton,
                       variant: AppButtonVariant.secondary,
                       expand: false,
                       icon: AppIcons.key,
@@ -169,18 +169,18 @@ class _FamilyPageState extends State<FamilyPage> {
               ],
               const SizedBox(height: 6),
               AppButton(
-                label: 'Tambah anak',
+                label: context.s.addChild,
                 variant: AppButtonVariant.secondary,
                 icon: AppIcons.userPlus,
                 onPressed: _addChild,
               ),
               const SizedBox(height: 28),
-              Text('Orang tua & pengasuh', style: AppText.titleLg),
+              Text(context.s.parentsAndCaregivers, style: AppText.titleLg),
               const SizedBox(height: 10),
               for (final adult in adults) ...[
                 ListRowPill(
                   title: adult.name,
-                  subtitle: adult.role == MemberRole.owner ? 'Pemilik' : 'Admin',
+                  subtitle: adult.role == MemberRole.owner ? context.s.roleOwner : context.s.roleAdmin,
                   leading: MemberAvatar(name: adult.name, avatarKey: adult.avatar),
                 ),
                 const SizedBox(height: 10),
@@ -188,7 +188,7 @@ class _FamilyPageState extends State<FamilyPage> {
               if (isOwner) ...[
                 const SizedBox(height: 6),
                 AppButton(
-                  label: 'Undang orang tua / pengasuh',
+                  label: context.s.inviteAdult,
                   variant: AppButtonVariant.secondary,
                   icon: AppIcons.userPlus,
                   onPressed: () => _showInvite(role: MemberRole.admin),
@@ -196,19 +196,19 @@ class _FamilyPageState extends State<FamilyPage> {
               ],
               const SizedBox(height: 40),
               AppButton(
-                label: 'Pengaturan keluarga',
+                label: context.s.familySettings,
                 icon: AppIcons.gear,
                 variant: AppButtonVariant.secondary,
                 onPressed: () => context.push('/parent/family/settings'),
               ),
               const SizedBox(height: 12),
               AppButton(
-                label: 'Keluar',
+                label: context.s.signOut,
                 variant: AppButtonVariant.destructive,
                 icon: AppIcons.signOut,
                 onPressed: () => _session.signOut(),
               ),
-            ],
+            ]),
           );
         },
       ),

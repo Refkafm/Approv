@@ -1,18 +1,19 @@
-/// Format angka poin gaya Indonesia: 3200 -> "3.200", -10 -> "-10".
+import '../l10n/strings.dart';
+
+/// Format angka poin: 3200 -> "3.200" (Indonesia) / "3,200" (Inggris), -10 -> "-10".
 String formatPoints(int value) {
+  final separator = S.current.languageCode == 'en' ? ',' : '.';
   final digits = value.abs().toString();
   final buffer = StringBuffer(value < 0 ? '-' : '');
   for (var i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) buffer.write('.');
+    if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(separator);
     buffer.write(digits[i]);
   }
   return buffer.toString();
 }
 
-const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
-/// Tanggal singkat gaya Indonesia: "12 Mar 2015".
-String formatDateShort(DateTime date) => '${date.day} ${_months[date.month - 1]} ${date.year}';
+/// Tanggal singkat: "12 Mar 2015" (nama bulan sesuai bahasa aktif).
+String formatDateShort(DateTime date) => '${date.day} ${S.current.monthShort(date.month)} ${date.year}';
 
 /// Waktu laporan relatif terhadap hari ini: "Hari ini 10.30", "Kemarin 18.05", "3 Nov 07.15".
 String formatReportTime(DateTime time, {DateTime? now}) {
@@ -23,7 +24,7 @@ String formatReportTime(DateTime time, {DateTime? now}) {
     current.month,
     current.day,
   ).difference(DateTime(time.year, time.month, time.day)).inDays;
-  if (days == 0) return 'Hari ini $hm';
-  if (days == 1) return 'Kemarin $hm';
-  return '${time.day} ${_months[time.month - 1]} $hm';
+  if (days == 0) return S.current.todayAt(hm);
+  if (days == 1) return S.current.yesterdayAt(hm);
+  return '${time.day} ${S.current.monthShort(time.month)} $hm';
 }

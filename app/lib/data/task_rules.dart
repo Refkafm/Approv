@@ -1,4 +1,5 @@
 import 'task_models.dart';
+import '../l10n/strings.dart';
 
 /// Status satu tugas untuk satu anak pada hari ini (layar A-3).
 class TodayTask {
@@ -29,16 +30,17 @@ class TodayTask {
 
   /// Status yang ditampilkan ke anak (A-3: belum / menunggu / disetujui / ditolak / perlu foto ulang).
   String get statusLabel {
-    if (!scheduledToday) return 'Bukan jadwal hari ini';
+    final s = S.current;
+    if (!scheduledToday) return s.notScheduledToday;
     final latest = this.latest;
-    if (latest == null) return 'Belum dikerjakan';
+    if (latest == null) return s.notDoneYet;
     return switch (latest.status) {
-      SubmissionStatus.pending => 'Menunggu persetujuan',
-      SubmissionStatus.needsRetake => 'Perlu foto ulang',
+      SubmissionStatus.pending => s.waitingApproval,
+      SubmissionStatus.needsRetake => s.needsNewPhoto,
       SubmissionStatus.rejected =>
-        latest.reason == null ? 'Ditolak, coba lagi ya' : 'Ditolak: ${latest.reason}. Coba lagi ya',
-      SubmissionStatus.approved when latest.reversed => 'Dibatalkan orang tua',
-      SubmissionStatus.approved => canReport ? 'Disetujui · bisa lagi ($used/$limit)' : 'Disetujui',
+        latest.reason == null ? s.rejectedTryAgain : s.rejectedReasonTryAgain(latest.reason!),
+      SubmissionStatus.approved when latest.reversed => s.undoneByParent,
+      SubmissionStatus.approved => canReport ? s.approvedCanRepeat(used, limit) : s.approvedLabel,
     };
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/motion.dart';
 import 'tokens.dart';
 import 'typography.dart';
 
@@ -22,6 +23,16 @@ abstract final class AppTheme {
       ),
       // Umpan balik tekan memakai efek "ditekan ke kertas", bukan ripple
       splashFactory: NoSplash.splashFactory,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: AppPageTransitionsBuilder(),
+          TargetPlatform.iOS: AppPageTransitionsBuilder(),
+          TargetPlatform.macOS: AppPageTransitionsBuilder(),
+          TargetPlatform.windows: AppPageTransitionsBuilder(),
+          TargetPlatform.linux: AppPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: AppPageTransitionsBuilder(),
+        },
+      ),
       highlightColor: Colors.transparent,
       textTheme: base.textTheme.copyWith(
         displayLarge: AppText.displayXl,

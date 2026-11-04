@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../theme/tokens.dart';
 import '../theme/typography.dart';
 import 'pressable.dart';
+import '../../l10n/strings.dart';
 
 /// Avatar anggota: lingkaran pastel bergaris ink dengan huruf awal nama.
 /// Kunci warna disimpan di kolom members.avatar. Avatar ilustrasi menyusul (design.md 6).
@@ -50,8 +51,6 @@ class AvatarPicker extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onChanged;
 
-  static const _names = {'lime': 'hijau', 'lilac': 'ungu', 'sky': 'biru', 'peach': 'oranye', 'butter': 'kuning'};
-
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -60,7 +59,7 @@ class AvatarPicker extends StatelessWidget {
       children: [
         for (final key in MemberAvatar.colors.keys)
           Pressable(
-            semanticLabel: 'Avatar ${_names[key]}',
+            semanticLabel: context.s.avatarSemantic(context.s.avatarColorName(key)),
             selected: key == selected,
             onTap: () => onChanged(key),
             builder: (context, pressed) => Container(

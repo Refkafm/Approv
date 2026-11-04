@@ -6,19 +6,23 @@ import '../theme/app_icons.dart';
 
 import '../theme/tokens.dart';
 import '../theme/typography.dart';
+import '../../l10n/strings.dart';
 
 /// Status satu hari di indikator streak (design.md 7.10b, PRD aturan bisnis 8).
 enum StreakDay {
-  success('berhasil'),
-  pending('menunggu persetujuan'),
+  success,
+  pending,
 
   /// Putus, atau hari yang belum terjadi.
-  empty('belum ada'),
-  today('hari ini, belum ada laporan');
+  empty,
+  today;
 
-  const StreakDay(this.spoken);
-
-  final String spoken;
+  String get spoken => switch (this) {
+    success => S.current.streakSuccess,
+    pending => S.current.streakPending,
+    empty => S.current.streakEmpty,
+    today => S.current.streakToday,
+  };
 }
 
 /// Deretan 7 hari (Senin–Minggu) + jumlah hari berturut-turut.
@@ -28,9 +32,6 @@ class StreakRow extends StatelessWidget {
 
   final List<StreakDay> days;
   final int count;
-
-  static const _dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-  static const _dayNamesLong = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
   bool get hasPending => days.contains(StreakDay.pending);
 
@@ -44,7 +45,7 @@ class StreakRow extends StatelessWidget {
           TextSpan(
             children: [
               TextSpan(text: '$count', style: AppText.titleLg),
-              TextSpan(text: ' hari berturut-turut', style: AppText.body),
+              TextSpan(text: context.s.daysInARow, style: AppText.body),
             ],
           ),
         ),
@@ -55,14 +56,14 @@ class StreakRow extends StatelessWidget {
           children: [
             for (var i = 0; i < 7; i++)
               Semantics(
-                label: '${_dayNamesLong[i]}: ${days[i].spoken}',
+                label: '${context.s.isoDayLong(i + 1)}: ${days[i].spoken}',
                 child: ExcludeSemantics(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _DayCircle(state: days[i]),
                       const SizedBox(height: 4),
-                      Text(_dayNames[i], style: AppText.label),
+                      Text(context.s.isoDayShort(i + 1), style: AppText.label),
                     ],
                   ),
                 ),
@@ -71,7 +72,7 @@ class StreakRow extends StatelessWidget {
         ),
         if (hasPending) ...[
           const SizedBox(height: 8),
-          Text('Menunggu persetujuan, streak aman dulu.', style: AppText.bodySm.copyWith(color: AppColors.inkMuted)),
+          Text(context.s.streakPendingNote, style: AppText.bodySm.copyWith(color: AppColors.inkMuted)),
         ],
       ],
     );

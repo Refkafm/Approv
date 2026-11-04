@@ -10,6 +10,7 @@ import '../../data/app_exception.dart';
 import '../../data/settings_models.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
+import '../../l10n/strings.dart';
 
 /// Pengaturan keluarga (PRD R-02, layar O-14): nama, zona waktu, bahasa, jam tidur notifikasi,
 /// aturan penalti & bonus streak.
@@ -55,7 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final picked = await showTimePicker(
       context: context,
       initialTime: start ? s.quietStart : s.quietEnd,
-      helpText: start ? 'Jam tidur mulai' : 'Jam tidur selesai',
+      helpText: start ? context.s.quietStartHelp : context.s.quietEndHelp,
     );
     if (picked != null) _update((s) => start ? s.copyWith(quietStart: picked) : s.copyWith(quietEnd: picked));
   }
@@ -75,7 +76,9 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await session.repository.updateFamilySettings(session.activeMember!.familyId, settings);
       session.markDataChanged();
+      // Tutup dulu: ganti bahasa membangun ulang app dan router
       if (mounted) context.pop();
+      await session.setLanguage(settings.locale);
     } on AppException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -87,15 +90,15 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final s = _settings;
     if (s == null) {
-      return OnboardingScaffold(title: 'Pengaturan', onBack: () => context.pop(), children: const []);
+      return OnboardingScaffold(title: context.s.settings, onBack: () => context.pop(), children: const []);
     }
     return OnboardingScaffold(
-      title: 'Pengaturan',
+      title: context.s.settings,
       onBack: _busy ? null : () => context.pop(),
       children: [
-        AppTextField(label: 'Nama keluarga', controller: _name, maxLength: 60),
+        AppTextField(label: context.s.familyNameLabel, controller: _name, maxLength: 60),
         const SizedBox(height: 24),
-        const _Label('Zona waktu'),
+        _Label(context.s.timezoneLabel),
         Wrap(
           spacing: 8,
           children: [
@@ -107,14 +110,14 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
           ],
         ),
-        const _Hint('Menentukan kapan tugas harian dan batas harian berganti hari.'),
+        _Hint(context.s.timezoneHint),
         const SizedBox(height: 24),
-        const _Label('Bahasa'),
+        _Label(context.s.languageLabel),
         Wrap(
           spacing: 8,
           children: [
             PillChip(
-              label: 'Indonesia',
+              label: 'Bahasa Indonesia',
               selected: s.locale == 'id',
               onTap: () => _update((s) => s.copyWith(locale: 'id')),
             ),
@@ -125,13 +128,14 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
+        _Hint(context.s.languageHint),
         const SizedBox(height: 24),
-        const _Label('Jam tidur anak'),
+        _Label(context.s.quietHoursLabel),
         Row(
           children: [
             Expanded(
               child: AppButton(
-                label: 'Mulai ${FamilySettings.formatTime(s.quietStart)}',
+                label: context.s.startsAt(FamilySettings.formatTime(s.quietStart)),
                 variant: AppButtonVariant.secondary,
                 onPressed: () => _pickTime(start: true),
               ),
@@ -139,22 +143,22 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(width: 12),
             Expanded(
               child: AppButton(
-                label: 'Selesai ${FamilySettings.formatTime(s.quietEnd)}',
+                label: context.s.endsAt(FamilySettings.formatTime(s.quietEnd)),
                 variant: AppButtonVariant.secondary,
                 onPressed: () => _pickTime(start: false),
               ),
             ),
           ],
         ),
-        const _Hint('Notifikasi untuk anak di jam ini ditahan dan dikirim setelah jam tidur selesai.'),
+        _Hint(context.s.quietHoursHint),
         const SizedBox(height: 24),
-        const _Label('Bonus streak 7 hari'),
+        _Label(context.s.streakBonusLabel),
         Wrap(
           spacing: 8,
           children: [
             for (final pct in const [0, 5, 10, 15, 20])
               PillChip(
-                label: pct == 0 ? 'Tidak ada' : '$pct%',
+                label: pct == 0 ? context.s.none : '$pct%',
                 selected: s.streakBonusPct == pct,
                 onTap: () => _update((s) => s.copyWith(streakBonusPct: pct)),
               ),
@@ -168,11 +172,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Penalti boleh melebihi saldo', style: AppText.body),
-                    Text(
-                      'Saldo anak bisa jadi minus (utang poin).',
-                      style: AppText.bodySm.copyWith(color: AppColors.inkMuted),
-                    ),
+                    Text(context.s.allowNegativeLabel, style: AppText.body),
+                    Text(context.s.allowNegativeHint, style: AppText.bodySm.copyWith(color: AppColors.inkMuted)),
                   ],
                 ),
               ),
@@ -189,7 +190,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         const SizedBox(height: 28),
-        AppButton(label: _busy ? 'Menyimpan...' : 'Simpan', onPressed: _busy ? null : _save),
+        AppButton(label: _busy ? context.s.saving : context.s.save, onPressed: _busy ? null : _save),
         FormError(_error),
       ],
     );

@@ -1,15 +1,23 @@
 import 'dart:typed_data';
 
+import '../l10n/strings.dart';
+
 /// Foto bukti (PRD 4b). Kolom mengikuti tabel submission_photos.
 enum PhotoKind {
-  single('single', ''),
-  before('before', 'Sebelum'),
-  after('after', 'Sesudah');
+  single('single'),
+  before('before'),
+  after('after');
 
-  const PhotoKind(this.db, this.label);
+  const PhotoKind(this.db);
 
   final String db;
-  final String label;
+
+  /// Kosong untuk foto tunggal.
+  String get label => switch (this) {
+    single => '',
+    before => S.current.photoBefore,
+    after => S.current.photoAfter,
+  };
 
   static PhotoKind parse(String value) => values.firstWhere((k) => k.db == value);
 }
@@ -59,11 +67,11 @@ String? missingPhotosLabel({required List<PhotoCapture> photos, required int min
   if (beforeAfter) {
     final hasBefore = photos.any((p) => p.kind == PhotoKind.before);
     final hasAfter = photos.any((p) => p.kind == PhotoKind.after);
-    if (!hasBefore && !hasAfter) return 'Butuh foto sebelum & sesudah';
-    if (!hasBefore) return 'Butuh foto sebelum';
-    if (!hasAfter) return 'Butuh foto sesudah';
+    if (!hasBefore && !hasAfter) return S.current.needBeforeAfter;
+    if (!hasBefore) return S.current.needBefore;
+    if (!hasAfter) return S.current.needAfter;
     return null;
   }
   final missing = minPhotos - photos.length;
-  return missing > 0 ? 'Butuh $missing foto lagi' : null;
+  return missing > 0 ? S.current.needMorePhotos(missing) : null;
 }

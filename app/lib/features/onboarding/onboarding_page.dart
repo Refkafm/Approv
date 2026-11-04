@@ -18,6 +18,7 @@ import '../../data/task_models.dart';
 import '../family/child_form.dart';
 import '../shell/session.dart';
 import 'onboarding_scaffold.dart';
+import '../../l10n/strings.dart';
 
 /// Setup awal orang tua (PRD Flow 1, layar O-2, A-02, A-03, M-01):
 /// keluarga → anak → template usia → review → kode untuk HP anak. Target ≤ 10 menit.
@@ -75,7 +76,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final familyName = _familyName.text.trim();
     final ownerName = _ownerName.text.trim();
     if (familyName.isEmpty || ownerName.isEmpty) {
-      throw const _FormMessage('Isi nama keluarga dan nama panggilanmu dulu ya.');
+      throw _FormMessage(context.s.onbNamesRequired);
     }
     // Tahan redirect: setelah keluarga dibuat, akun ini sudah "punya keluarga" tapi setup belum selesai
     _session.beginFlow();
@@ -136,64 +137,71 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final error = _error;
     return switch (_step) {
       _Step.family => OnboardingScaffold(
-        title: 'Buat keluarga',
-        subtitle: 'Mulai dari nama keluarga. Semua bisa diubah nanti.',
+        title: context.s.onbCreateTitle,
+        subtitle: context.s.onbCreateSubtitle,
         step: 0,
         stepCount: 5,
         children: [
           AppTextField(
-            label: 'Nama keluarga',
+            label: context.s.familyNameLabel,
             controller: _familyName,
-            hint: 'mis. Keluarga Rina',
+            hint: context.s.familyNameHint,
             textCapitalization: TextCapitalization.words,
             maxLength: 60,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
           AppTextField(
-            label: 'Nama panggilanmu',
+            label: context.s.nicknameLabel,
             controller: _ownerName,
-            hint: 'mis. Ibu Rina',
+            hint: context.s.nicknameHintOwner,
             textCapitalization: TextCapitalization.words,
             maxLength: 40,
             onSubmitted: (_) => _createFamily(),
           ),
           const SizedBox(height: 24),
-          AppButton(label: _busy ? 'Menyimpan...' : 'Lanjut', onPressed: _busy ? null : _createFamily),
+          AppButton(label: _busy ? context.s.saving : context.s.continueLabel, onPressed: _busy ? null : _createFamily),
           FormError(error),
           const SizedBox(height: 32),
           AppButton(
-            label: 'Punya kode undangan dari pasangan?',
+            label: context.s.onbHaveInvite,
             variant: AppButtonVariant.secondary,
             onPressed: _busy ? null : () => context.go('/join'),
           ),
           const SizedBox(height: 12),
-          AppButton(label: 'Keluar', variant: AppButtonVariant.secondary, onPressed: _busy ? null : _session.signOut),
+          AppButton(
+            label: context.s.signOut,
+            variant: AppButtonVariant.secondary,
+            onPressed: _busy ? null : _session.signOut,
+          ),
         ],
       ),
       _Step.children => OnboardingScaffold(
-        title: 'Tambah anak',
-        subtitle: 'Anak tidak perlu email atau nomor HP. Nanti cukup masukkan kode di HP-nya.',
+        title: context.s.onbAddChildTitle,
+        subtitle: context.s.onbAddChildSubtitle,
         step: 1,
         stepCount: 5,
         children: [
           for (final child in _children) ...[
             ListRowPill(
               title: child.name,
-              subtitle: child.birthDate == null ? 'Tanggal lahir belum diisi' : formatDateShort(child.birthDate!),
+              subtitle: child.birthDate == null ? context.s.birthDateEmpty : formatDateShort(child.birthDate!),
               leading: MemberAvatar(name: child.name, avatarKey: child.avatar),
             ),
             const SizedBox(height: 10),
           ],
           if (_children.isNotEmpty) const SizedBox(height: 14),
-          ChildForm(submitLabel: _children.isEmpty ? 'Tambah anak' : 'Tambah anak lagi', onSubmit: _addChild),
+          ChildForm(
+            submitLabel: _children.isEmpty ? context.s.addChild : context.s.addAnotherChild,
+            onSubmit: _addChild,
+          ),
           const SizedBox(height: 28),
-          AppButton(label: 'Lanjut', onPressed: _children.isEmpty ? null : () => _go(_Step.template)),
+          AppButton(label: context.s.continueLabel, onPressed: _children.isEmpty ? null : () => _go(_Step.template)),
         ],
       ),
       _Step.template => OnboardingScaffold(
-        title: 'Pilih template poin',
-        subtitle: 'Isi otomatis contoh tugas dan hadiah sesuai usia. Angkanya bisa diubah kapan saja.',
+        title: context.s.onbTemplateTitle,
+        subtitle: context.s.onbTemplateSubtitle,
         step: 2,
         stepCount: 5,
         onBack: _busy ? null : () => _go(_Step.children),
@@ -201,18 +209,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
           for (final band in AgeBand.values) ...[
             SelectableCard(
               title: band.label,
-              subtitle: '±${band.dailyPoints} poin/hari · 30 menit layar = ${band.screenTimePrice} poin',
-              badge: band == _suggestedBand ? 'Disarankan' : null,
+              subtitle: context.s.templateSummary(formatPoints(band.dailyPoints), formatPoints(band.screenTimePrice)),
+              badge: band == _suggestedBand ? context.s.suggested : null,
               selected: band == (_band ?? _suggestedBand),
               onTap: _busy ? null : () => setState(() => _band = band),
             ),
             const SizedBox(height: 14),
           ],
           const SizedBox(height: 10),
-          AppButton(label: _busy ? 'Menyiapkan...' : 'Pakai template ini', onPressed: _busy ? null : _applyTemplate),
+          AppButton(
+            label: _busy ? context.s.preparing : context.s.useTemplate,
+            onPressed: _busy ? null : _applyTemplate,
+          ),
           const SizedBox(height: 12),
           AppButton(
-            label: 'Lewati, isi sendiri nanti',
+            label: context.s.skipTemplate,
             variant: AppButtonVariant.secondary,
             onPressed: _busy ? null : _openConnect,
           ),
@@ -220,12 +231,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ],
       ),
       _Step.review => OnboardingScaffold(
-        title: 'Cek tugas & hadiah',
-        subtitle: 'Ini contoh dari template. Ubah atau hapus nanti di tab Tugas dan Hadiah.',
+        title: context.s.onbReviewTitle,
+        subtitle: context.s.onbReviewSubtitle,
         step: 3,
         stepCount: 5,
         children: [
-          Text('Tugas', style: AppText.titleLg),
+          Text(context.s.tasks, style: AppText.titleLg),
           const SizedBox(height: 10),
           for (final task in _tasks) ...[
             ListRowPill(
@@ -236,24 +247,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
             const SizedBox(height: 10),
           ],
           const SizedBox(height: 18),
-          Text('Hadiah', style: AppText.titleLg),
+          Text(context.s.rewards, style: AppText.titleLg),
           const SizedBox(height: 10),
           for (final reward in _rewards) ...[
             ListRowPill(
               title: reward.title,
-              subtitle: reward.type == RewardType.goal ? 'Goal (ditabung)' : 'Instan',
+              subtitle: reward.type == RewardType.goal ? context.s.rewardGoalSaved : context.s.rewardInstant,
               trailing: _PointsTag(formatPoints(reward.cost)),
             ),
             const SizedBox(height: 10),
           ],
           const SizedBox(height: 18),
-          AppButton(label: _busy ? 'Menyiapkan...' : 'Lanjut', onPressed: _busy ? null : _openConnect),
+          AppButton(
+            label: _busy ? context.s.preparing : context.s.continueLabel,
+            onPressed: _busy ? null : _openConnect,
+          ),
           FormError(error),
         ],
       ),
       _Step.connect => OnboardingScaffold(
-        title: 'Hubungkan HP anak',
-        subtitle: 'Di HP anak: buka app, pilih "Saya anak", lalu masukkan kodenya.',
+        title: context.s.onbConnectTitle,
+        subtitle: context.s.onbConnectSubtitle,
         step: 4,
         stepCount: 5,
         children: [
@@ -261,12 +275,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
             InviteCodeCard(code: _codes[child.id]!, forName: child.name),
             const SizedBox(height: AppSpace.cardGap),
           ],
-          Text(
-            'Kode baru bisa dibuat kapan saja di tab Keluarga.',
-            style: AppText.bodySm.copyWith(color: AppColors.inkMuted),
-          ),
+          Text(context.s.onbConnectNote, style: AppText.bodySm.copyWith(color: AppColors.inkMuted)),
           const SizedBox(height: 24),
-          AppButton(label: 'Selesai', onPressed: _busy ? null : () => _run(_session.finishFlow)),
+          AppButton(label: context.s.done, onPressed: _busy ? null : () => _run(_session.finishFlow)),
           FormError(error),
         ],
       ),

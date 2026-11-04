@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../theme/app_icons.dart';
 import '../theme/typography.dart';
 import 'icon_circle_button.dart';
+import '../../l10n/strings.dart';
 
 /// Angka dengan tombol − dan + (mis. batas laporan per hari, jumlah foto).
 class NumberStepper extends StatelessWidget {
@@ -35,7 +36,7 @@ class NumberStepper extends StatelessWidget {
           Expanded(child: Text(label, style: AppText.body)),
           IconCircleButton(
             icon: AppIcons.minus,
-            semanticLabel: 'Kurangi $label',
+            semanticLabel: context.s.decrease(label),
             onPressed: value > min ? () => onChanged(value - 1) : null,
           ),
           SizedBox(
@@ -44,7 +45,7 @@ class NumberStepper extends StatelessWidget {
           ),
           IconCircleButton(
             icon: AppIcons.plus,
-            semanticLabel: 'Tambah $label',
+            semanticLabel: context.s.increase(label),
             onPressed: value < max ? () => onChanged(value + 1) : null,
           ),
         ],

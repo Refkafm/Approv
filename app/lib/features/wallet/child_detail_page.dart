@@ -16,6 +16,7 @@ import '../shell/session.dart';
 import 'adjust_sheet.dart';
 import 'ledger_list.dart';
 import 'wallet_views.dart';
+import '../../l10n/strings.dart';
 
 typedef _ChildData = ({WalletSummary wallet, List<LedgerEntry> history, Set<String> reversible});
 
@@ -60,7 +61,7 @@ class _ChildDetailPageState extends State<ChildDetailPage> with ReloadOnChanges 
   Widget build(BuildContext context) {
     final member = widget.member;
     if (member == null) {
-      return OnboardingScaffold(title: 'Anak tidak ditemukan', onBack: () => context.pop(), children: const []);
+      return OnboardingScaffold(title: context.s.childNotFound, onBack: () => context.pop(), children: const []);
     }
 
     return FutureBuilder<_ChildData>(
@@ -74,22 +75,22 @@ class _ChildDetailPageState extends State<ChildDetailPage> with ReloadOnChanges 
           children: [
             if (snapshot.hasError)
               Text(
-                snapshot.error is AppException ? (snapshot.error! as AppException).message : 'Gagal memuat data.',
+                snapshot.error is AppException ? (snapshot.error! as AppException).message : context.s.loadDataFailed,
                 style: AppText.body.copyWith(color: AppColors.tangerineDeep),
               ),
             BalanceView(data?.wallet),
             const SizedBox(height: 24),
             StreakView(data?.wallet),
             const SizedBox(height: 24),
-            Text('Minggu ini', style: AppText.titleLg),
+            Text(context.s.thisWeek, style: AppText.titleLg),
             const SizedBox(height: 10),
             Row(
               children: [
-                _StatTile(label: 'Tugas disetujui', value: stats == null ? '–' : '${stats.tasksApproved}'),
+                _StatTile(label: context.s.tasksApproved, value: stats == null ? '–' : '${stats.tasksApproved}'),
                 const SizedBox(width: 10),
-                _StatTile(label: 'Poin masuk', value: stats == null ? '–' : '+${formatPoints(stats.pointsIn)}'),
+                _StatTile(label: context.s.pointsIn, value: stats == null ? '–' : '+${formatPoints(stats.pointsIn)}'),
                 const SizedBox(width: 10),
-                _StatTile(label: 'Poin keluar', value: stats == null ? '–' : '−${formatPoints(stats.pointsOut)}'),
+                _StatTile(label: context.s.pointsOut, value: stats == null ? '–' : '−${formatPoints(stats.pointsOut)}'),
               ],
             ),
             const SizedBox(height: 24),
@@ -97,7 +98,7 @@ class _ChildDetailPageState extends State<ChildDetailPage> with ReloadOnChanges 
               children: [
                 Expanded(
                   child: AppButton(
-                    label: 'Bonus',
+                    label: context.s.bonus,
                     icon: AppIcons.plus,
                     onPressed: data == null
                         ? null
@@ -112,7 +113,7 @@ class _ChildDetailPageState extends State<ChildDetailPage> with ReloadOnChanges 
                 const SizedBox(width: 12),
                 Expanded(
                   child: AppButton(
-                    label: 'Penalti',
+                    label: context.s.penalty,
                     icon: AppIcons.minus,
                     variant: AppButtonVariant.secondary,
                     onPressed: data == null
@@ -128,13 +129,14 @@ class _ChildDetailPageState extends State<ChildDetailPage> with ReloadOnChanges 
               ],
             ),
             const SizedBox(height: 32),
-            Text('Riwayat poin', style: AppText.titleLg),
+            Text(context.s.pointsHistory, style: AppText.titleLg),
             const SizedBox(height: 10),
             if (data != null)
               LedgerList(
                 entries: data.history,
                 reversible: data.reversible,
-                onReverse: (e) => showReverseSheet(context, submissionId: e.refId!, taskTitle: e.reason ?? 'tugas'),
+                onReverse: (e) =>
+                    showReverseSheet(context, submissionId: e.refId!, taskTitle: e.reason ?? context.s.taskFallback),
               ),
           ],
         );

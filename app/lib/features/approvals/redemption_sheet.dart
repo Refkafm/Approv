@@ -10,6 +10,7 @@ import '../../data/app_exception.dart';
 import '../../data/reward_models.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
+import '../../l10n/strings.dart';
 
 /// Proses penukaran (PRD H-04, H-05, Flow 4 & 5): setujui, tolak dengan alasan (poin kembali),
 /// atau tandai "sudah diberikan".
@@ -44,7 +45,7 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
 
   Future<void> _review(RedemptionAction action) async {
     if (action == RedemptionAction.reject && _reason.text.trim().isEmpty) {
-      setState(() => _error = 'Tulis alasan menolak, ${widget.redemption.memberName} akan melihatnya.');
+      setState(() => _error = context.s.rejectReasonRequired(widget.redemption.memberName));
       return;
     }
     final session = SessionScope.read(context);
@@ -90,7 +91,11 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
             Text(r.rewardTitle, style: AppText.titleLg),
             const SizedBox(height: 4),
             Text(
-              '${r.memberName} · ${formatPoints(r.cost)} poin · ${formatReportTime(r.createdAt).toLowerCase()}',
+              context.s.redemptionSummary(
+                r.memberName,
+                formatPoints(r.cost),
+                formatReportTime(r.createdAt).toLowerCase(),
+              ),
               style: AppText.body.copyWith(color: AppColors.inkMuted),
             ),
             const SizedBox(height: 16),
@@ -98,48 +103,44 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
               Center(child: StatusStamp(status: result, animate: true)),
               const SizedBox(height: 16),
               if (result == StampStatus.approved && r.durationMinutes != null)
-                Text(
-                  'Buka akses untuk ${r.memberName} secara manual (Screen Time / Family Link) selama '
-                  '${r.durationMinutes} menit. Timer sudah berjalan di HP-nya.',
-                  style: AppText.body,
-                ),
+                Text(context.s.screenTimeManual(r.memberName, r.durationMinutes!), style: AppText.body),
               const SizedBox(height: 16),
               AppButton(
-                label: 'Tutup',
+                label: context.s.close,
                 variant: AppButtonVariant.secondary,
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ] else if (requested) ...[
               Text(
                 r.durationMinutes != null
-                    ? 'Setelah disetujui, timer ${r.durationMinutes} menit berjalan di HP ${r.memberName}.'
-                    : 'Poin sudah ditahan. Kalau ditolak, poin kembali penuh.',
+                    ? context.s.screenTimeAfterApprove(r.durationMinutes!, r.memberName)
+                    : context.s.pointsHeld,
                 style: AppText.body,
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Alasan (wajib bila menolak)',
+                label: context.s.rejectReasonRequiredLabel,
                 controller: _reason,
-                hint: 'mis. Besok saja, sudah malam',
+                hint: context.s.redemptionRejectHint,
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 200,
               ),
               const SizedBox(height: 16),
               AppButton(
-                label: _busy ? 'Menyimpan...' : 'Setujui',
+                label: _busy ? context.s.saving : context.s.approve,
                 onPressed: _busy ? null : () => _review(RedemptionAction.approve),
               ),
               const SizedBox(height: 12),
               AppButton(
-                label: 'Tolak',
+                label: context.s.reject,
                 variant: AppButtonVariant.destructive,
                 onPressed: _busy ? null : () => _review(RedemptionAction.reject),
               ),
             ] else ...[
-              Text('Sudah disetujui. Tandai bila hadiahnya sudah diberikan.', style: AppText.body),
+              Text(context.s.markGivenHint, style: AppText.body),
               const SizedBox(height: 16),
               AppButton(
-                label: _busy ? 'Menyimpan...' : 'Sudah diberikan',
+                label: _busy ? context.s.saving : context.s.markGiven,
                 onPressed: _busy ? null : () => _review(RedemptionAction.fulfill),
               ),
             ],

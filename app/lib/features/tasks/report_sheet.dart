@@ -19,6 +19,7 @@ import '../../data/task_models.dart';
 import '../../data/task_rules.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
+import '../../l10n/strings.dart';
 
 /// Lapor tugas selesai (PRD L-01, L-02, layar A-4, Flow 3 langkah 1–2), termasuk bukti foto
 /// (PF-01–PF-03, PF-06, PF-07) dan kirim foto ulang (PF-05). Setelah terkirim, menampilkan stempel
@@ -49,15 +50,13 @@ Future<void> showReportSheet(BuildContext context, TodayTask item) async {
             const SizedBox(height: 24),
             Text(
               auto
-                  ? '+${formatPoints(item.task.points)} poin masuk!'
-                  : (item.needsRetake
-                        ? 'Foto baru terkirim! Tunggu orang tua memeriksa ya.'
-                        : 'Laporan terkirim! Tunggu orang tua memeriksa ya.'),
+                  ? context.s.pointsEarned(formatPoints(item.task.points))
+                  : (item.needsRetake ? context.s.newPhotoSent : context.s.reportSent),
               textAlign: TextAlign.center,
               style: AppText.titleMd,
             ),
             const SizedBox(height: 20),
-            AppButton(label: 'Oke', onPressed: () => Navigator.of(dialogContext).pop()),
+            AppButton(label: context.s.ok, onPressed: () => Navigator.of(dialogContext).pop()),
           ],
         ),
       ),
@@ -97,7 +96,7 @@ class _ReportSheetState extends State<_ReportSheet> {
     final picker = PhotoPickerScope.of(context);
     setState(() {
       _busy = true;
-      _busyLabel = 'Menyiapkan foto...';
+      _busyLabel = context.s.preparingPhoto;
       _error = null;
     });
     try {
@@ -120,7 +119,7 @@ class _ReportSheetState extends State<_ReportSheet> {
         });
       }
     } on Exception {
-      if (mounted) setState(() => _error = 'Kamera tidak bisa dibuka. Cek izin kamera di pengaturan HP.');
+      if (mounted) setState(() => _error = context.s.cameraUnavailable);
     } finally {
       if (mounted) {
         setState(() {
@@ -136,7 +135,7 @@ class _ReportSheetState extends State<_ReportSheet> {
     final member = session.activeMember!;
     setState(() {
       _busy = true;
-      _busyLabel = _photos.isEmpty ? 'Mengirim...' : 'Mengunggah foto...';
+      _busyLabel = _photos.isEmpty ? context.s.sending : context.s.uploadingPhoto;
       _error = null;
     });
     try {
@@ -160,9 +159,7 @@ class _ReportSheetState extends State<_ReportSheet> {
           'offline': !sent,
         });
         if (!sent && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak ada sinyal. Laporan disimpan dan dikirim otomatis nanti.')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.s.offlineQueued)));
         }
       }
       session.markDataChanged();
@@ -186,7 +183,7 @@ class _ReportSheetState extends State<_ReportSheet> {
       for (final p in _photos)
         ViewerPhoto(
           image: Future.value(MemoryImage(p.bytes)),
-          caption: 'Diambil ${formatReportTime(p.takenAt).toLowerCase()}',
+          caption: context.s.takenAt(formatReportTime(p.takenAt).toLowerCase()),
           label: p.kind.label,
         ),
     ], initial: index);
@@ -226,15 +223,12 @@ class _ReportSheetState extends State<_ReportSheet> {
             const SizedBox(height: 12),
             Text(
               retake
-                  ? 'Orang tua minta foto ulang: ${widget.item.latest?.reason ?? 'fotonya kurang jelas'}. '
-                        'Laporanmu tetap jalan dan streak tidak putus.'
+                  ? context.s.retakeRequested(widget.item.latest?.reason ?? context.s.photoUnclear)
                   : switch (task.verification) {
-                      TaskVerification.auto => 'Poinnya langsung masuk begitu kamu lapor.',
-                      TaskVerification.approve => 'Orang tua akan memeriksa dulu, lalu poinnya masuk.',
+                      TaskVerification.auto => context.s.reportAutoHint,
+                      TaskVerification.approve => context.s.reportApproveHint,
                       TaskVerification.photo =>
-                        task.beforeAfter
-                            ? 'Foto keadaan sebelum dan sesudah dikerjakan, lalu kirim ke orang tua.'
-                            : 'Foto hasil kerjamu, lalu kirim ke orang tua.',
+                        task.beforeAfter ? context.s.reportBeforeAfterHint : context.s.reportPhotoHint,
                     },
               style: AppText.body.copyWith(color: AppColors.inkMuted),
             ),
@@ -242,9 +236,9 @@ class _ReportSheetState extends State<_ReportSheet> {
             const SizedBox(height: 20),
             if (!retake) ...[
               AppTextField(
-                label: 'Catatan (opsional)',
+                label: context.s.noteOptional,
                 controller: _note,
-                hint: task.needsPhoto ? 'mis. Mejanya juga sudah dilap' : 'mis. Piringnya sudah di rak',
+                hint: task.needsPhoto ? context.s.reportNoteHintPhoto : context.s.reportNoteHint,
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 500,
                 maxLines: 3,
@@ -252,7 +246,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               const SizedBox(height: 20),
             ],
             AppButton(
-              label: _busyLabel ?? missing ?? (retake ? 'Kirim foto ulang' : 'Kirim laporan'),
+              label: _busyLabel ?? missing ?? (retake ? context.s.sendRetake : context.s.sendReport),
               onPressed: _busy || missing != null ? null : _send,
             ),
             FormError(_error),
@@ -282,13 +276,12 @@ class _ReportSheetState extends State<_ReportSheet> {
                     seed: i,
                     width: 120,
                     label: photo.kind.label,
-                    semanticLabel:
-                        'Foto ${photo.kind.label.isEmpty ? '${i + 1}' : photo.kind.label}, ketuk untuk melihat',
+                    semanticLabel: context.s.photoTapToView(photo.kind.label.isEmpty ? '${i + 1}' : photo.kind.label),
                     onTap: () => _preview(photo),
                   ),
                   const SizedBox(height: 8),
                   AppButton(
-                    label: 'Ambil ulang',
+                    label: context.s.retakePhoto,
                     variant: AppButtonVariant.secondary,
                     expand: false,
                     icon: AppIcons.arrowCounterClockwise,
@@ -302,10 +295,11 @@ class _ReportSheetState extends State<_ReportSheet> {
         if (slots != null)
           for (final kind in slots)
             if (!_photos.any((p) => p.kind == kind)) ...[
-              _captureButtons(task, kind, 'Foto ${kind.label.toLowerCase()}'),
+              _captureButtons(task, kind, context.s.photoOf(kind.label.toLowerCase())),
               const SizedBox(height: 12),
             ],
-        if (canAddMore) _captureButtons(task, PhotoKind.single, _photos.isEmpty ? 'Ambil foto' : 'Tambah foto'),
+        if (canAddMore)
+          _captureButtons(task, PhotoKind.single, _photos.isEmpty ? context.s.takePhoto : context.s.addPhoto),
       ],
     );
   }
@@ -322,7 +316,7 @@ class _ReportSheetState extends State<_ReportSheet> {
         if (task.allowGallery) ...[
           const SizedBox(height: 8),
           AppButton(
-            label: 'Dari galeri',
+            label: context.s.fromGallery,
             icon: AppIcons.images,
             variant: AppButtonVariant.secondary,
             onPressed: _busy ? null : () => _take(kind, fromGallery: true),

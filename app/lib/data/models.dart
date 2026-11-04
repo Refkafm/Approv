@@ -1,6 +1,8 @@
 /// Model data minggu 2 (akun & keluarga). Kolom mengikuti supabase/migrations/20261102000100_schema.sql.
 library;
 
+import '../l10n/strings.dart';
+
 class AuthUser {
   const AuthUser({required this.id, required this.isAnonymous});
 
@@ -64,15 +66,16 @@ class Member {
 
 /// Kelompok usia template ekonomi (PRD "Template ekonomi bawaan").
 enum AgeBand {
-  young('6-9', '6–9 tahun', 150, 50),
-  middle('10-13', '10–13 tahun', 300, 100),
-  teen('14-17', '14–17 tahun', 400, 150);
+  young('6-9', 150, 50),
+  middle('10-13', 300, 100),
+  teen('14-17', 400, 150);
 
-  const AgeBand(this.key, this.label, this.dailyPoints, this.screenTimePrice);
+  const AgeBand(this.key, this.dailyPoints, this.screenTimePrice);
 
   /// Nilai p_age_band untuk RPC apply_economy_template.
   final String key;
-  final String label;
+
+  String get label => S.current.ageBandLabel(key.replaceAll('-', '–'));
   final int dailyPoints;
   final int screenTimePrice;
 

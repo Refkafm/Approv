@@ -68,12 +68,15 @@ abstract final class TapTarget {
 
 abstract final class AppMotion {
   static const press = Duration(milliseconds: 80);
+
+  /// Pindah halaman (push / alur) dan pindah tab bawah.
+  static const page = Duration(milliseconds: 300);
+  static const tab = Duration(milliseconds: 240);
   static const pressOffset = Offset(2, 3);
   static const cardIn = Duration(milliseconds: 220);
   static const cardStagger = Duration(milliseconds: 40);
   static const stamp = Duration(milliseconds: 320);
   static const countUp = Duration(milliseconds: 600);
-  static const dotFill = Duration(milliseconds: 30);
   static const confetti = Duration(milliseconds: 1200);
 
   /// Pengganti semua animasi saat "reduce motion" aktif.

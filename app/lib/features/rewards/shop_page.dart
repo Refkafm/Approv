@@ -19,6 +19,8 @@ import '../shell/reload_on_changes.dart';
 import '../shell/session.dart';
 import '../wallet/wallet_views.dart';
 import 'goal_card.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 typedef _ShopData = ({WalletSummary wallet, List<Reward> rewards, GoalProgress? goal, List<Redemption> mine});
 
@@ -69,18 +71,20 @@ class _ShopPageState extends State<ShopPage> with ReloadOnChanges {
           final open = data?.mine.where((r) => r.status.isOpen).toList() ?? const <Redemption>[];
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-            children: [
-              Text('Toko hadiah', style: AppText.displayLg),
+            children: staggered([
+              Text(context.s.rewardShop, style: AppText.displayLg),
               const SizedBox(height: 16),
               if (snapshot.hasError)
                 Text(
-                  snapshot.error is AppException ? (snapshot.error! as AppException).message : 'Gagal memuat hadiah.',
+                  snapshot.error is AppException
+                      ? (snapshot.error! as AppException).message
+                      : context.s.loadRewardsFailed,
                   style: AppText.body.copyWith(color: AppColors.tangerineDeep),
                 ),
               BalanceView(data?.wallet),
               if (open.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                Text('Sedang ditukar', style: AppText.titleLg),
+                Text(context.s.inProgressRedemptions, style: AppText.titleLg),
                 const SizedBox(height: 10),
                 for (final r in open) ...[
                   r.sessionActive(now) ? _SessionTimer(r, onEnded: reload) : _OpenRedemptionRow(r),
@@ -94,12 +98,15 @@ class _ShopPageState extends State<ShopPage> with ReloadOnChanges {
                   onAction: data.goal == null || data.wallet.balance.available <= 0
                       ? null
                       : () => _showSaveSheet(context, data.wallet.balance.available),
-                  actionLabel: 'Sisihkan poin untuk goal',
+                  actionLabel: context.s.setAsideForGoal,
                 ),
                 for (final type in RewardType.values)
                   if (data.rewards.any((r) => r.type == type)) ...[
                     const SizedBox(height: 24),
-                    Text(type == RewardType.instant ? 'Hadiah instan' : 'Hadiah goal', style: AppText.titleLg),
+                    Text(
+                      type == RewardType.instant ? context.s.instantRewards : context.s.goalRewards,
+                      style: AppText.titleLg,
+                    ),
                     const SizedBox(height: 10),
                     for (final reward in data.rewards.where((r) => r.type == type)) ...[
                       _RewardRow(reward: reward, data: data),
@@ -107,7 +114,7 @@ class _ShopPageState extends State<ShopPage> with ReloadOnChanges {
                     ],
                   ],
               ],
-            ],
+            ]),
           );
         },
       ),
@@ -141,9 +148,9 @@ class _RewardRow extends StatelessWidget {
     return ListRowPill(
       title: reward.title,
       subtitle: [
-        '${formatPoints(reward.cost)} poin',
-        if (reward.durationMinutes != null) '${reward.durationMinutes} menit',
-        short <= 0 ? 'Cukup!' : 'kurang ${formatPoints(short)}',
+        context.s.pointsAmount(formatPoints(reward.cost)),
+        if (reward.durationMinutes != null) context.s.minutesAmount(reward.durationMinutes!),
+        short <= 0 ? context.s.enough : context.s.shortBy(formatPoints(short)),
       ].join(' · '),
       leading: CircleBadge(
         color: short <= 0 ? AppColors.pastelLime : AppColors.pastelLilac,
@@ -179,13 +186,13 @@ Future<void> _showConfirm(BuildContext context, Reward reward, _ShopData data) a
             const SizedBox(height: 24),
             Text(
               result == StampStatus.pending
-                  ? 'Permintaan terkirim! Tunggu orang tua menyetujui ya.'
-                  : (reward.isScreenTime ? 'Disetujui! Timer sesimu sudah berjalan.' : 'Hore! Hadiahnya untukmu.'),
+                  ? context.s.requestSent
+                  : (reward.isScreenTime ? context.s.screenTimeApproved : context.s.rewardYours),
               textAlign: TextAlign.center,
               style: AppText.titleMd,
             ),
             const SizedBox(height: 20),
-            AppButton(label: 'Oke', onPressed: () => Navigator.of(dialogContext).pop()),
+            AppButton(label: context.s.ok, onPressed: () => Navigator.of(dialogContext).pop()),
           ],
         ),
       ),
@@ -250,18 +257,20 @@ class _ConfirmSheetState extends State<_ConfirmSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          Text('Harga: ${formatPoints(reward.cost)} poin', style: AppText.titleMd),
+          Text(context.s.priceLabel(formatPoints(reward.cost)), style: AppText.titleMd),
           Text(
             short <= 0
-                ? 'Sisa poinmu setelah tukar: ${formatPoints(spendable - reward.cost)}'
-                : 'Poinmu kurang ${formatPoints(short)} lagi.',
+                ? context.s.balanceAfter(formatPoints(spendable - reward.cost))
+                : context.s.pointsShortMore(formatPoints(short)),
             style: AppText.body.copyWith(color: AppColors.inkMuted),
           ),
           if (reward.needsApproval)
-            Text('Orang tua akan menyetujui dulu.', style: AppText.body.copyWith(color: AppColors.inkMuted)),
+            Text(context.s.parentWillApprove, style: AppText.body.copyWith(color: AppColors.inkMuted)),
           const SizedBox(height: 20),
           AppButton(
-            label: _busy ? 'Sebentar...' : (short <= 0 ? 'Tukar sekarang' : 'Kurang ${formatPoints(short)} poin'),
+            label: _busy
+                ? context.s.oneMoment
+                : (short <= 0 ? context.s.redeemNow : context.s.shortPoints(formatPoints(short))),
             onPressed: _busy || short > 0
                 ? null
                 : () => _run(() async {
@@ -274,7 +283,7 @@ class _ConfirmSheetState extends State<_ConfirmSheet> {
           if (reward.type == RewardType.goal && !isCurrentGoal) ...[
             const SizedBox(height: 12),
             AppButton(
-              label: 'Jadikan goal',
+              label: context.s.makeGoal,
               icon: AppIcons.flag,
               variant: AppButtonVariant.secondary,
               onPressed: _busy
@@ -299,15 +308,13 @@ class _OpenRedemptionRow extends StatelessWidget {
     final requested = redemption.status == RedemptionStatus.requested;
     return ListRowPill(
       title: redemption.rewardTitle,
-      subtitle: requested
-          ? 'Menunggu orang tua · ${formatPoints(redemption.cost)} poin ditahan'
-          : 'Disetujui, tunggu diberikan',
+      subtitle: requested ? context.s.waitingParentHeld(formatPoints(redemption.cost)) : context.s.approvedWaitGiven,
       leading: CircleBadge(color: AppColors.pastelButter, icon: AppIcons.reward(redemption.rewardIcon)),
       trailing: requested
           ? Padding(
               padding: const EdgeInsets.only(right: 4),
               child: AppButton(
-                label: 'Batalkan',
+                label: context.s.cancelAction,
                 variant: AppButtonVariant.secondary,
                 expand: false,
                 onPressed: () async {
@@ -379,7 +386,7 @@ class _SessionTimerState extends State<_SessionTimer> {
       child: Semantics(
         container: true,
         liveRegion: soon,
-        label: '${widget.redemption.rewardTitle}, sisa ${safe.inMinutes} menit',
+        label: context.s.timerSemantic(widget.redemption.rewardTitle, safe.inMinutes),
         child: ExcludeSemantics(
           child: Row(
             children: [
@@ -392,8 +399,10 @@ class _SessionTimerState extends State<_SessionTimer> {
                     Text(widget.redemption.rewardTitle, style: AppText.titleMd),
                     Text(
                       soon
-                          ? 'Sisa 5 menit lagi, siap-siap ya.'
-                          : 'Sampai jam ${end.hour.toString().padLeft(2, '0')}.${end.minute.toString().padLeft(2, '0')}',
+                          ? context.s.fiveMinutesLeft
+                          : context.s.untilTime(
+                              '${end.hour.toString().padLeft(2, '0')}.${end.minute.toString().padLeft(2, '0')}',
+                            ),
                       style: AppText.body,
                     ),
                   ],
@@ -453,12 +462,9 @@ class _SaveSheetState extends State<_SaveSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sisihkan untuk goal', style: AppText.titleLg),
+          Text(context.s.setAsideTitle, style: AppText.titleLg),
           const SizedBox(height: 8),
-          Text(
-            'Poin yang disisihkan tidak terpakai untuk hadiah instan.',
-            style: AppText.body.copyWith(color: AppColors.inkMuted),
-          ),
+          Text(context.s.setAsideNote, style: AppText.body.copyWith(color: AppColors.inkMuted)),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -466,14 +472,17 @@ class _SaveSheetState extends State<_SaveSheet> {
             children: [
               for (final a in options)
                 PillChip(
-                  label: a == widget.available ? 'Semua (${formatPoints(a)})' : formatPoints(a),
+                  label: a == widget.available ? context.s.allAmount(formatPoints(a)) : formatPoints(a),
                   selected: _amount == a,
                   onTap: () => setState(() => _amount = a),
                 ),
             ],
           ),
           const SizedBox(height: 20),
-          AppButton(label: _busy ? 'Menyimpan...' : 'Sisihkan', onPressed: _busy || _amount == null ? null : _save),
+          AppButton(
+            label: _busy ? context.s.saving : context.s.setAside,
+            onPressed: _busy || _amount == null ? null : _save,
+          ),
           FormError(_error),
         ],
       ),

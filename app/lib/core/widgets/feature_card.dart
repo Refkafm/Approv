@@ -36,6 +36,7 @@ class FeatureCard extends StatelessWidget {
       child: DefaultTextStyle.merge(
         style: TextStyle(color: tone.text),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(

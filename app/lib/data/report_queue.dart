@@ -7,6 +7,7 @@ import 'app_exception.dart';
 import 'models.dart';
 import 'photo_models.dart';
 import 'submission_repository.dart';
+import '../l10n/strings.dart';
 
 /// Laporan yang belum terkirim karena tidak ada sinyal (Rencana minggu 8, "antrean offline").
 class PendingReport {
@@ -175,7 +176,7 @@ class ReportQueue extends ChangeNotifier {
     try {
       for (final report in pendingFor(member.id)) {
         if (_clock().difference(report.reportedAt) > maxAge) {
-          _remove(report, dropped: 'Laporan yang tersimpan lebih dari 24 jam tidak bisa dikirim lagi.');
+          _remove(report, dropped: S.current.reportExpired);
           continue;
         }
         try {
@@ -192,7 +193,7 @@ class ReportQueue extends ChangeNotifier {
           // Masih tanpa sinyal: coba lagi nanti, urutan laporan tetap dijaga
           if (_retryable.contains(e.code)) break;
           // Mis. tugas diarsipkan atau jatah sudah terpakai (laporan pertama ternyata sampai)
-          _remove(report, dropped: 'Satu laporan tidak terkirim: ${e.message}');
+          _remove(report, dropped: S.current.reportNotSent(e.message));
         }
       }
     } finally {

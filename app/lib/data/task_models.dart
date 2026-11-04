@@ -2,17 +2,26 @@
 /// di supabase/migrations/20261102000100_schema.sql.
 library;
 
-enum TaskFrequency {
-  once('once', 'Sekali'),
-  daily('daily', 'Harian'),
-  daysOfWeek('days_of_week', 'Hari tertentu'),
-  weekly('weekly', 'Mingguan'),
-  repeat('repeat', 'Berulang');
+import '../l10n/strings.dart';
 
-  const TaskFrequency(this.db, this.label);
+enum TaskFrequency {
+  once('once'),
+  daily('daily'),
+  daysOfWeek('days_of_week'),
+  weekly('weekly'),
+  repeat('repeat');
+
+  const TaskFrequency(this.db);
 
   final String db;
-  final String label;
+
+  String get label => switch (this) {
+    once => S.current.freqOnce,
+    daily => S.current.freqDaily,
+    daysOfWeek => S.current.freqDaysOfWeek,
+    weekly => S.current.freqWeekly,
+    repeat => S.current.freqRepeat,
+  };
 
   static TaskFrequency parse(String value) => values.firstWhere((f) => f.db == value);
 
@@ -21,20 +30,25 @@ enum TaskFrequency {
 }
 
 enum TaskVerification {
-  auto('auto', 'Otomatis'),
-  approve('approve', 'Persetujuan'),
-  photo('photo', 'Persetujuan + foto');
+  auto('auto'),
+  approve('approve'),
+  photo('photo');
 
-  const TaskVerification(this.db, this.label);
+  const TaskVerification(this.db);
 
   final String db;
-  final String label;
+
+  String get label => switch (this) {
+    auto => S.current.verifyAuto,
+    approve => S.current.verifyApprove,
+    photo => S.current.verifyPhoto,
+  };
 
   static TaskVerification parse(String value) => values.firstWhere((v) => v.db == value);
 }
 
-/// Nama hari ISO (1 = Senin).
-const isoDayNames = {1: 'Sen', 2: 'Sel', 3: 'Rab', 4: 'Kam', 5: 'Jum', 6: 'Sab', 7: 'Min'};
+/// Nama hari ISO singkat (1 = Senin), sesuai bahasa aktif.
+Map<int, String> get isoDayNames => {for (var d = 1; d <= 7; d++) d: S.current.isoDayShort(d)};
 
 /// Isi form tugas (PRD T-01–T-05).
 class TaskInput {
@@ -79,13 +93,13 @@ class TaskInput {
   /// Pesan untuk pengguna bila tidak valid; sama dengan CHECK di tabel tasks.
   String? validate() {
     final name = title.trim();
-    if (name.isEmpty) return 'Isi nama tugas dulu.';
-    if (name.length > 60) return 'Nama tugas maksimal 60 karakter.';
-    if (points < 1 || points > 100000) return 'Poin harus antara 1 dan 100.000.';
-    if (frequency == TaskFrequency.daysOfWeek && daysOfWeek.isEmpty) return 'Pilih minimal satu hari.';
-    if (frequency.hasDailyLimit && (maxPerDay < 1 || maxPerDay > 20)) return 'Batas per hari 1 sampai 20.';
-    if (needsPhoto && (minPhotos < 1 || minPhotos > 3)) return 'Jumlah foto 1 sampai 3.';
-    if ((description?.length ?? 0) > 500) return 'Deskripsi maksimal 500 karakter.';
+    if (name.isEmpty) return S.current.taskNameRequired;
+    if (name.length > 60) return S.current.taskNameTooLong;
+    if (points < 1 || points > 100000) return S.current.taskPointsRange;
+    if (frequency == TaskFrequency.daysOfWeek && daysOfWeek.isEmpty) return S.current.pickAtLeastOneDay;
+    if (frequency.hasDailyLimit && (maxPerDay < 1 || maxPerDay > 20)) return S.current.dailyLimitRange;
+    if (needsPhoto && (minPhotos < 1 || minPhotos > 3)) return S.current.photoCountRange;
+    if ((description?.length ?? 0) > 500) return S.current.descriptionTooLong;
     return null;
   }
 
@@ -174,7 +188,7 @@ class Task extends TaskInput {
   String get scheduleLabel {
     final parts = <String>[
       frequency == TaskFrequency.daysOfWeek ? daysOfWeek.map((d) => isoDayNames[d]).join(', ') : frequency.label,
-      if (frequency.hasDailyLimit && maxPerDay > 1) 'maks $maxPerDay×/hari',
+      if (frequency.hasDailyLimit && maxPerDay > 1) S.current.maxPerDayShortLabel(maxPerDay),
       verification.label,
     ];
     return parts.join(' · ');

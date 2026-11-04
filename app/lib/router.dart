@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/widgets/motion.dart';
 import 'core/widgets/paper_background.dart';
 import 'data/models.dart';
 import 'data/reward_models.dart';
@@ -29,7 +30,7 @@ import 'features/wallet/child_detail_page.dart';
 import 'features/wallet/child_history_page.dart';
 
 /// Layar yang boleh dibuka sebelum punya keluarga.
-const _guestRoutes = {'/', '/login', '/join'};
+const _guestRoutes = {'/', '/login', '/login/register', '/join'};
 
 GoRouter buildRouter(SessionController session) {
   return GoRouter(
@@ -57,13 +58,18 @@ GoRouter buildRouter(SessionController session) {
         path: '/splash',
         builder: (context, state) => const PaperBackground(child: SizedBox.expand()),
       ),
-      GoRoute(path: '/', builder: (context, state) => const WelcomePage()),
-      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-      GoRoute(path: '/join', builder: (context, state) => const JoinPage()),
-      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingPage()),
+      GoRoute(path: '/', pageBuilder: (context, state) => fadeRisePage(state, const WelcomePage())),
+      GoRoute(
+        path: '/login',
+        pageBuilder: (context, state) => fadeRisePage(state, const LoginPage()),
+        routes: [GoRoute(path: 'register', builder: (context, state) => const RegisterPage())],
+      ),
+      GoRoute(path: '/join', pageBuilder: (context, state) => fadeRisePage(state, const JoinPage())),
+      GoRoute(path: '/onboarding', pageBuilder: (context, state) => fadeRisePage(state, const OnboardingPage())),
       GoRoute(path: '/dev/components', builder: (context, state) => const ComponentsPage()),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, shell) => ParentShell(navigationShell: shell),
+      StatefulShellRoute(
+        pageBuilder: (context, state, shell) => fadeRisePage(state, ParentShell(navigationShell: shell)),
+        navigatorContainerBuilder: _animatedBranches,
         branches: [
           StatefulShellBranch(
             routes: [
@@ -134,8 +140,9 @@ GoRouter buildRouter(SessionController session) {
           ),
         ],
       ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, shell) => ChildShell(navigationShell: shell),
+      StatefulShellRoute(
+        pageBuilder: (context, state, shell) => fadeRisePage(state, ChildShell(navigationShell: shell)),
+        navigatorContainerBuilder: _animatedBranches,
         branches: [
           _branch('/child/home', (_) => const ChildHomePage()),
           _branch('/child/tasks', (_) => const ChildTasksPage()),
@@ -146,6 +153,9 @@ GoRouter buildRouter(SessionController session) {
     ],
   );
 }
+
+Widget _animatedBranches(BuildContext context, StatefulNavigationShell shell, List<Widget> children) =>
+    AnimatedBranchContainer(currentIndex: shell.currentIndex, children: children);
 
 StatefulShellBranch _branch(String path, Widget Function(GoRouterState state) page) {
   return StatefulShellBranch(

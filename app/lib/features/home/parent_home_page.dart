@@ -9,12 +9,14 @@ import '../../core/widgets/feature_card.dart';
 import '../../core/widgets/icon_circle_button.dart';
 import '../../core/widgets/list_row_pill.dart';
 import '../../core/widgets/member_avatar.dart';
-import '../../core/widgets/dot_progress.dart';
+import '../../core/widgets/goal_progress_bar.dart';
 import '../../data/models.dart';
 import '../../data/reward_models.dart';
 import '../../data/wallet_models.dart';
 import '../shell/reload_on_changes.dart';
 import '../shell/session.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Beranda orang tua (PRD O-3, design.md 8): ringkasan per anak → persetujuan menunggu → keluarga.
 class ParentHomePage extends StatelessWidget {
@@ -25,15 +27,18 @@ class ParentHomePage extends StatelessWidget {
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-        children: [
+        children: staggered([
           Row(
             children: [
               Expanded(
-                child: Text('Halo, ${SessionScope.of(context).activeMember?.name ?? ''}', style: AppText.displayLg),
+                child: Text(
+                  context.s.helloName(SessionScope.of(context).activeMember?.name ?? ''),
+                  style: AppText.displayLg,
+                ),
               ),
               IconCircleButton(
                 icon: AppIcons.gear,
-                semanticLabel: 'Keluarga & pengaturan',
+                semanticLabel: context.s.familySettingsLabel,
                 onPressed: () => context.go('/parent/family'),
               ),
             ],
@@ -45,15 +50,15 @@ class ParentHomePage extends StatelessWidget {
           const SizedBox(height: AppSpace.cardGap),
           FeatureCard(
             tone: FeatureCardTone.grape,
-            title: 'Keluarga',
-            description: 'Anggota, kode undangan, dan pengaturan',
+            title: context.s.navFamily,
+            description: context.s.familyCardDesc,
             action: IconCircleButton(
               icon: AppIcons.arrowUpRight,
-              semanticLabel: 'Buka keluarga',
+              semanticLabel: context.s.openFamily,
               onPressed: () => context.go('/parent/family'),
             ),
           ),
-        ],
+        ]),
       ),
     );
   }
@@ -99,16 +104,16 @@ class _PendingCardState extends State<_PendingCard> with ReloadOnChanges {
         final count = reports + redemptions;
         return FeatureCard(
           tone: FeatureCardTone.sunflower,
-          title: 'Persetujuan menunggu',
+          title: context.s.pendingApprovalsTitle,
           description: count == 0
-              ? 'Tidak ada yang menunggu.'
+              ? context.s.nothingWaiting
               : [
-                  if (reports > 0) '$reports laporan tugas',
-                  if (redemptions > 0) '$redemptions penukaran hadiah',
+                  if (reports > 0) context.s.taskReportsCount(reports),
+                  if (redemptions > 0) context.s.redemptionsCount(redemptions),
                 ].join(' · '),
           action: IconCircleButton(
             icon: AppIcons.arrowUpRight,
-            semanticLabel: 'Buka antrean persetujuan',
+            semanticLabel: context.s.openApprovalQueue,
             onPressed: () => context.go('/parent/approvals'),
           ),
           child: Text('$count', style: AppText.numberHero),
@@ -157,10 +162,7 @@ class _ChildrenOverviewState extends State<_ChildrenOverview> with ReloadOnChang
       builder: (context, snapshot) {
         final children = snapshot.data ?? const <(Member, WalletSummary, GoalProgress?)>[];
         if (snapshot.connectionState == ConnectionState.done && children.isEmpty) {
-          return Text(
-            'Belum ada anak. Tambahkan di tab Keluarga.',
-            style: AppText.body.copyWith(color: AppColors.inkMuted),
-          );
+          return Text(context.s.noChildrenYet, style: AppText.body.copyWith(color: AppColors.inkMuted));
         }
         return Column(
           children: [
@@ -168,10 +170,10 @@ class _ChildrenOverviewState extends State<_ChildrenOverview> with ReloadOnChang
               ListRowPill(
                 title: child.name,
                 subtitle: [
-                  '${formatPoints(wallet.balance.available)} poin',
-                  if (wallet.streak > 0) 'streak ${wallet.streak} hari',
-                  if (goal != null) 'goal ${DotProgress.percent(goal.progress, goal.reward.cost)}%',
-                  if (!child.isConnected) 'belum terhubung',
+                  context.s.pointsAmount(formatPoints(wallet.balance.available)),
+                  if (wallet.streak > 0) context.s.streakDays(wallet.streak),
+                  if (goal != null) context.s.goalPercent(GoalProgressBar.percent(goal.progress, goal.reward.cost)),
+                  if (!child.isConnected) context.s.notConnected,
                 ].join(' · '),
                 leading: MemberAvatar(name: child.name, avatarKey: child.avatar),
                 onTap: () => context.push('/parent/home/child', extra: child),

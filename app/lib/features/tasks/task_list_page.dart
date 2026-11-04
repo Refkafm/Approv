@@ -12,6 +12,8 @@ import '../../data/app_exception.dart';
 import '../../data/models.dart';
 import '../../data/task_models.dart';
 import '../shell/session.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Daftar tugas orang tua (PRD layar O-6): filter aktif/arsip, per anak, per frekuensi.
 class TaskListPage extends StatefulWidget {
@@ -74,18 +76,18 @@ class _TaskListPageState extends State<TaskListPage> {
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-            children: [
+            children: staggered([
               Row(
                 children: [
-                  Expanded(child: Text('Tugas', style: AppText.displayLg)),
-                  IconCircleButton(icon: AppIcons.plus, semanticLabel: 'Tugas baru', onPressed: () => _openForm()),
+                  Expanded(child: Text(context.s.tasks, style: AppText.displayLg)),
+                  IconCircleButton(icon: AppIcons.plus, semanticLabel: context.s.newTask, onPressed: () => _openForm()),
                 ],
               ),
               const SizedBox(height: 16),
               ChipScroller(
                 children: [
                   PillChip(
-                    label: 'Aktif',
+                    label: context.s.activeFilter,
                     selected: !_archived,
                     onTap: () {
                       _archived = false;
@@ -93,7 +95,7 @@ class _TaskListPageState extends State<TaskListPage> {
                     },
                   ),
                   PillChip(
-                    label: 'Arsip',
+                    label: context.s.archivedFilter,
                     selected: _archived,
                     onTap: () {
                       _archived = true;
@@ -107,7 +109,7 @@ class _TaskListPageState extends State<TaskListPage> {
                 ChipScroller(
                   children: [
                     PillChip(
-                      label: 'Semua anak',
+                      label: context.s.allChildren,
                       selected: _childId == null,
                       onTap: () => setState(() => _childId = null),
                     ),
@@ -124,7 +126,7 @@ class _TaskListPageState extends State<TaskListPage> {
               ChipScroller(
                 children: [
                   PillChip(
-                    label: 'Semua frekuensi',
+                    label: context.s.allFrequencies,
                     selected: _frequency == null,
                     onTap: () => setState(() => _frequency = null),
                   ),
@@ -135,21 +137,25 @@ class _TaskListPageState extends State<TaskListPage> {
               const SizedBox(height: 20),
               if (snapshot.hasError)
                 Text(
-                  snapshot.error is AppException ? (snapshot.error! as AppException).message : 'Gagal memuat tugas.',
+                  snapshot.error is AppException
+                      ? (snapshot.error! as AppException).message
+                      : context.s.loadTasksFailed,
                   style: AppText.body.copyWith(color: AppColors.tangerineDeep),
                 )
               else if (snapshot.connectionState == ConnectionState.done && visible.isEmpty)
                 Text(
                   _archived
-                      ? 'Tidak ada tugas di arsip.'
-                      : (tasks.isEmpty ? 'Belum ada tugas. Tekan + untuk membuat.' : 'Tidak ada tugas yang cocok.'),
+                      ? context.s.noArchivedTasks
+                      : (tasks.isEmpty ? context.s.noTasksYet : context.s.noMatchingTasks),
                   style: AppText.body.copyWith(color: AppColors.inkMuted),
                 ),
               for (final task in visible) ...[
                 ListRowPill(
                   title: task.title,
                   subtitle: [
-                    task.assigneeIds.isEmpty ? 'Semua anak' : task.assigneeIds.map((id) => names[id] ?? '?').join(', '),
+                    task.assigneeIds.isEmpty
+                        ? context.s.allChildren
+                        : task.assigneeIds.map((id) => names[id] ?? '?').join(', '),
                     task.scheduleLabel,
                   ].join(' · '),
                   leading: CircleBadge(color: AppColors.pastelPeach, icon: AppIcons.task(task.icon)),
@@ -161,7 +167,7 @@ class _TaskListPageState extends State<TaskListPage> {
                 ),
                 const SizedBox(height: 10),
               ],
-            ],
+            ]),
           );
         },
       ),

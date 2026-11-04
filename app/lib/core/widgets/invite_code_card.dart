@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../theme/tokens.dart';
 import '../theme/typography.dart';
+import '../../l10n/strings.dart';
 
 /// Kode undangan besar untuk diketik di HP anak/pengasuh (PRD A-04, M-02).
 class InviteCodeCard extends StatelessWidget {
@@ -27,10 +28,10 @@ class InviteCodeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Kode untuk $forName', style: AppText.titleMd),
+          Text(context.s.codeFor(forName), style: AppText.titleMd),
           const SizedBox(height: 8),
           Semantics(
-            label: 'Kode ${code.split('').join(' ')}',
+            label: context.s.codeSemantic(code.split('').join(' ')),
             child: ExcludeSemantics(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
@@ -39,10 +40,7 @@ class InviteCodeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            'Berlaku 24 jam dan hanya bisa dipakai sekali.',
-            style: AppText.bodySm.copyWith(color: AppColors.inkMuted),
-          ),
+          Text(context.s.codeValidity, style: AppText.bodySm.copyWith(color: AppColors.inkMuted)),
         ],
       ),
     );

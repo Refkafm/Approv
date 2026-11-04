@@ -9,6 +9,7 @@ import '../../data/fake/fake_repository.dart';
 import '../../data/app_repository.dart';
 import '../../data/models.dart';
 import '../../data/report_queue.dart';
+import '../../l10n/language_store.dart';
 
 enum AppMode { parent, child }
 
@@ -20,7 +21,9 @@ class SessionController extends ChangeNotifier {
     this.push = const NoopPushService(),
     this.analytics = const NoopAnalytics(),
     ReportQueueStore? reportStore,
-  }) : reports = ReportQueue(repository, store: reportStore);
+    LanguageStore? languageStore,
+  }) : reports = ReportQueue(repository, store: reportStore),
+       _languageStore = languageStore ?? MemoryLanguageStore();
 
   final AppRepository repository;
   final PushService push;
@@ -33,6 +36,22 @@ class SessionController extends ChangeNotifier {
   bool _disposed = false;
   String? _pushUserId;
   StreamSubscription<void>? _authSub;
+
+  final LanguageStore _languageStore;
+  String _language = 'id';
+
+  /// Bahasa app ('id' / 'en'): pengaturan keluarga (PRD), atau pilihan di layar awal sebelum login.
+  String get language => _language;
+
+  /// Ganti bahasa di HP ini. Untuk keluarga, pengaturan keluarga tetap sumber utamanya.
+  Future<void> setLanguage(String code) async {
+    if (code != 'id' && code != 'en') return;
+    if (code != _language) {
+      _language = code;
+      notifyListeners();
+    }
+    await _languageStore.save(code);
+  }
 
   AuthUser? _user;
   List<Member> _memberships = const [];
@@ -60,6 +79,7 @@ class SessionController extends ChangeNotifier {
   Future<void> start() async {
     _authSub ??= repository.authChanges.listen((_) => refresh());
     _lifecycle ??= AppLifecycleListener(onResume: () => unawaited(flushReports()));
+    _language = await _languageStore.load() ?? _language;
     await reports.load();
     await refresh();
   }
@@ -90,6 +110,14 @@ class SessionController extends ChangeNotifier {
       _user = user;
     } on AppException {
       // Biarkan data sebelumnya; layar akan mencoba lagi saat refresh berikutnya
+    }
+    final member = activeMember;
+    if (member != null) {
+      try {
+        await setLanguage((await repository.familySettings(member.familyId)).locale);
+      } on AppException {
+        // Tetap pakai bahasa terakhir di HP ini
+      }
     }
     _ready = true;
     analytics.identify(_user?.id);

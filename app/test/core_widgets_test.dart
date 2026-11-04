@@ -1,7 +1,7 @@
 import 'package:family_points/core/format.dart';
 import 'package:family_points/core/theme/app_theme.dart';
 import 'package:family_points/core/widgets/app_button.dart';
-import 'package:family_points/core/widgets/dot_progress.dart';
+import 'package:family_points/core/widgets/goal_progress_bar.dart';
 import 'package:family_points/core/widgets/points_balance.dart';
 import 'package:family_points/core/widgets/status_stamp.dart';
 import 'package:family_points/core/widgets/streak_row.dart';
@@ -34,32 +34,35 @@ void main() {
     });
   });
 
-  group('DotProgress.filledDots', () {
-    test('20 titik, masing-masing 5%, dibulatkan ke bawah', () {
-      expect(DotProgress.filledDots(0, 5000), 0);
-      expect(DotProgress.filledDots(3200, 5000), 12); // 64%
-      expect(DotProgress.filledDots(249, 5000), 0); // belum genap 5%
-    });
-
-    test('titik terakhir hanya terisi saat poin benar-benar cukup', () {
-      expect(DotProgress.filledDots(4999, 5000), 19);
-      expect(DotProgress.filledDots(5000, 5000), 20);
-      expect(DotProgress.filledDots(9000, 5000), 20);
+  group('GoalProgressBar', () {
+    test('persen dibulatkan ke bawah; 100% hanya saat poin benar-benar cukup', () {
+      expect(GoalProgressBar.percent(0, 5000), 0);
+      expect(GoalProgressBar.percent(3200, 5000), 64);
+      expect(GoalProgressBar.percent(4999, 5000), 99);
+      expect(GoalProgressBar.percent(5000, 5000), 100);
+      expect(GoalProgressBar.percent(9000, 5000), 100);
     });
 
     test('aman untuk saldo negatif dan target nol', () {
-      expect(DotProgress.filledDots(-10, 5000), 0);
-      expect(DotProgress.filledDots(100, 0), 0);
-      expect(DotProgress.percent(3200, 5000), 64);
-    });
-
-    test('jumlah kolom tangga = 20 titik', () {
-      expect(DotProgress.columns.fold<int>(0, (a, b) => a + b), DotProgress.total);
+      expect(GoalProgressBar.fraction(-10, 5000), 0);
+      expect(GoalProgressBar.fraction(100, 0), 0);
+      expect(GoalProgressBar.fraction(9000, 5000), 1);
     });
 
     testWidgets('dibacakan sebagai teks oleh pembaca layar', (tester) async {
-      await tester.pumpWidget(_wrap(const DotProgress(saved: 3200, target: 5000, goalTitle: 'Sepatu')));
+      await tester.pumpWidget(_wrap(const GoalProgressBar(saved: 3200, target: 5000, goalTitle: 'Sepatu')));
+      await tester.pumpAndSettle();
       expect(find.bySemanticsLabel('Goal Sepatu, 3.200 dari 5.000 poin, 64 persen'), findsOneWidget);
+    });
+
+    testWidgets('bar memenuhi lebar yang tersedia dan isiannya sesuai persen', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const SizedBox(width: 300, child: GoalProgressBar(saved: 2500, target: 5000, goalTitle: 'Sepatu'))),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(GoalProgressBar)).width, 300);
+      final fill = tester.widget<FractionallySizedBox>(find.byType(FractionallySizedBox));
+      expect(fill.widthFactor, 0.5);
     });
   });
 

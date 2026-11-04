@@ -1,14 +1,17 @@
 /// Hadiah, penukaran, dan goal (PRD modul 6 & 7). Kolom mengikuti tabel rewards / redemptions / goals.
 library;
 
-enum RewardType {
-  instant('instant', 'Instan'),
-  goal('goal', 'Goal');
+import '../l10n/strings.dart';
 
-  const RewardType(this.db, this.label);
+enum RewardType {
+  instant('instant'),
+  goal('goal');
+
+  const RewardType(this.db);
 
   final String db;
-  final String label;
+
+  String get label => this == instant ? S.current.rewardInstantShort : S.current.goal;
 
   static RewardType parse(String value) => values.firstWhere((t) => t.db == value);
 }
@@ -41,12 +44,12 @@ class RewardInput {
 
   String? validate() {
     final name = title.trim();
-    if (name.isEmpty) return 'Isi nama hadiah dulu.';
-    if (name.length > 60) return 'Nama hadiah maksimal 60 karakter.';
-    if (cost < 1 || cost > 10000000) return 'Harga harus antara 1 dan 10.000.000 poin.';
-    if (durationMinutes != null && (durationMinutes! < 1 || durationMinutes! > 1440)) return 'Durasi 1–1440 menit.';
-    if (maxPerDay != null && maxPerDay! < 1) return 'Batas per hari minimal 1.';
-    if (stock != null && stock! < 0) return 'Stok tidak boleh minus.';
+    if (name.isEmpty) return S.current.rewardNameRequired;
+    if (name.length > 60) return S.current.rewardNameTooLong;
+    if (cost < 1 || cost > 10000000) return S.current.rewardCostRange;
+    if (durationMinutes != null && (durationMinutes! < 1 || durationMinutes! > 1440)) return S.current.durationRange;
+    if (maxPerDay != null && maxPerDay! < 1) return S.current.rewardDailyLimitMin;
+    if (stock != null && stock! < 0) return S.current.stockNotNegative;
     return null;
   }
 
@@ -132,11 +135,11 @@ class Reward extends RewardInput {
 
   /// Ringkasan untuk daftar, mis. "30 menit · maks 2×/hari · perlu persetujuan".
   String get rulesLabel => [
-    if (type == RewardType.goal) 'Goal (ditabung)',
-    if (durationMinutes != null) '$durationMinutes menit',
-    if (maxPerDay != null) 'maks $maxPerDay×/hari',
-    if (stock != null) 'stok $stock',
-    needsApproval ? 'perlu persetujuan' : 'langsung',
+    if (type == RewardType.goal) S.current.rewardGoalSaved,
+    if (durationMinutes != null) S.current.minutesAmount(durationMinutes!),
+    if (maxPerDay != null) S.current.maxPerDayShortLabel(maxPerDay!),
+    if (stock != null) S.current.stockAmount(stock!),
+    needsApproval ? S.current.needsApprovalShort : S.current.immediate,
   ].join(' · ');
 }
 

@@ -1,6 +1,8 @@
 /// Dompet poin (PRD modul 5). Saldo selalu dihitung dari ledger point_transactions.
 library;
 
+import '../l10n/strings.dart';
+
 /// Baris view member_balances.
 class Balance {
   const Balance({required this.available, this.goalSaved = 0, this.onHold = 0});
@@ -73,15 +75,15 @@ class LedgerEntry {
 
   /// Judul di riwayat; alasan selalu terlihat oleh anak (PRD aturan ekonomi "penalti selalu disertai alasan").
   String get title => switch (type) {
-    LedgerType.task => reason ?? 'Tugas',
-    LedgerType.bonus => 'Bonus: ${reason ?? 'kerja bagus'}',
-    LedgerType.penalty => 'Penalti: ${reason ?? '-'}',
-    LedgerType.streak => 'Bonus streak',
-    LedgerType.redeemHold => 'Tukar: ${reason ?? 'hadiah'}',
-    LedgerType.redeemRelease => 'Poin kembali${reason == null ? '' : ': $reason'}',
-    LedgerType.reversal => 'Dibatalkan: ${reason ?? '-'}',
-    LedgerType.goalSave => 'Ditabung untuk goal',
-    LedgerType.goalUnsave => 'Diambil dari tabungan goal',
+    LedgerType.task => reason ?? S.current.ledgerTask,
+    LedgerType.bonus => S.current.ledgerBonus(reason ?? S.current.greatWork),
+    LedgerType.penalty => S.current.ledgerPenalty(reason ?? '-'),
+    LedgerType.streak => S.current.ledgerStreak,
+    LedgerType.redeemHold => S.current.ledgerRedeem(reason ?? S.current.rewardFallback),
+    LedgerType.redeemRelease => S.current.ledgerRefund(reason),
+    LedgerType.reversal => S.current.ledgerReversal(reason ?? '-'),
+    LedgerType.goalSave => S.current.ledgerGoalSave,
+    LedgerType.goalUnsave => S.current.ledgerGoalUnsave,
   };
 }
 

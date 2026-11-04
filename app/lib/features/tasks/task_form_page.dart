@@ -15,6 +15,7 @@ import '../../data/models.dart';
 import '../../data/task_models.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
+import '../../l10n/strings.dart';
 
 /// Buat / ubah tugas (PRD layar O-7, T-01–T-05, T-08, PF-01, PF-06, PF-07).
 /// Setelah menyimpan, memanggil [SessionController.markDataChanged] supaya daftar tugas dimuat ulang.
@@ -123,44 +124,44 @@ class _TaskFormPageState extends State<TaskFormPage> {
   Widget build(BuildContext context) {
     final task = _task;
     if (widget.isEdit && task == null) {
-      return OnboardingScaffold(title: 'Tugas tidak ditemukan', onBack: () => context.pop(), children: const []);
+      return OnboardingScaffold(title: context.s.taskNotFound, onBack: () => context.pop(), children: const []);
     }
 
     return OnboardingScaffold(
-      title: task == null ? 'Tugas baru' : 'Ubah tugas',
+      title: task == null ? context.s.newTask : context.s.editTask,
       onBack: _busy ? null : () => context.pop(),
       children: [
         AppTextField(
-          label: 'Nama tugas',
+          label: context.s.taskNameLabel,
           controller: _title,
-          hint: 'mis. Siram tanaman',
+          hint: context.s.taskNameHint,
           textCapitalization: TextCapitalization.sentences,
           maxLength: 60,
         ),
         const SizedBox(height: 20),
-        _Label('Ikon'),
+        _Label(context.s.iconLabel),
         _IconPicker(selected: _icon, onChanged: (key) => setState(() => _icon = key)),
         const SizedBox(height: 20),
         AppTextField(
-          label: 'Poin',
+          label: context.s.pointsLabel,
           controller: _points,
           hint: '50',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           maxLength: 6,
         ),
-        if (task != null) _Hint('Mengubah poin tidak mengubah poin yang sudah pernah diberikan.'),
+        if (task != null) _Hint(context.s.pointsChangeHint),
         const SizedBox(height: 20),
         AppTextField(
-          label: 'Deskripsi (opsional)',
+          label: context.s.descriptionOptional,
           controller: _description,
-          hint: 'mis. Semua pot di teras',
+          hint: context.s.taskDescHint,
           textCapitalization: TextCapitalization.sentences,
           maxLength: 500,
           maxLines: 3,
         ),
         const SizedBox(height: 28),
-        _Label('Seberapa sering?'),
+        _Label(context.s.howOften),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -171,7 +172,7 @@ class _TaskFormPageState extends State<TaskFormPage> {
         ),
         if (_frequency == TaskFrequency.daysOfWeek) ...[
           const SizedBox(height: 16),
-          _Label('Hari'),
+          _Label(context.s.daysLabel),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -188,17 +189,17 @@ class _TaskFormPageState extends State<TaskFormPage> {
         if (_frequency.hasDailyLimit) ...[
           const SizedBox(height: 12),
           NumberStepper(
-            label: 'Maks laporan per hari',
+            label: context.s.maxPerDay,
             value: _maxPerDay,
             min: 1,
             max: 20,
             unit: '×',
             onChanged: (v) => setState(() => _maxPerDay = v),
           ),
-          _Hint('Mencegah tugas termudah diulang terus.'),
+          _Hint(context.s.maxPerDayHint),
         ],
         const SizedBox(height: 28),
-        _Label('Cara verifikasi'),
+        _Label(context.s.verificationLabel),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -208,34 +209,34 @@ class _TaskFormPageState extends State<TaskFormPage> {
           ],
         ),
         _Hint(switch (_verification) {
-          TaskVerification.auto => 'Poin langsung masuk. Kamu bisa membatalkannya dalam 24 jam.',
-          TaskVerification.approve => 'Poin masuk setelah kamu menyetujui laporannya.',
-          TaskVerification.photo => 'Anak wajib memotret hasilnya dari kamera di app.',
+          TaskVerification.auto => context.s.verifyAutoHint,
+          TaskVerification.approve => context.s.verifyApproveHint,
+          TaskVerification.photo => context.s.verifyPhotoHint,
         }),
         if (_verification == TaskVerification.photo) ...[
           const SizedBox(height: 12),
           NumberStepper(
-            label: 'Minimal foto',
+            label: context.s.minPhotos,
             value: _minPhotos,
             min: 1,
             max: 3,
             onChanged: (v) => setState(() => _minPhotos = v),
           ),
           _SwitchRow(
-            label: 'Foto sebelum & sesudah',
-            description: 'Mis. kamar berantakan lalu rapi.',
+            label: context.s.beforeAfterLabel,
+            description: context.s.beforeAfterDesc,
             value: _beforeAfter,
             onChanged: (v) => setState(() => _beforeAfter = v),
           ),
           _SwitchRow(
-            label: 'Boleh dari galeri',
-            description: 'Mis. foto nilai ujian dari guru. Biasanya hanya kamera, supaya tidak pakai foto lama.',
+            label: context.s.allowGalleryLabel,
+            description: context.s.allowGalleryDesc,
             value: _allowGallery,
             onChanged: (v) => setState(() => _allowGallery = v),
           ),
         ],
         const SizedBox(height: 28),
-        _Label('Untuk siapa?'),
+        _Label(context.s.forWhom),
         FutureBuilder<List<Member>>(
           future: _children,
           builder: (context, snapshot) {
@@ -248,7 +249,7 @@ class _TaskFormPageState extends State<TaskFormPage> {
                   runSpacing: 8,
                   children: [
                     PillChip(
-                      label: 'Semua anak',
+                      label: context.s.allChildren,
                       selected: _assignees.isEmpty,
                       onTap: () => setState(() => _assignees = {}),
                     ),
@@ -267,19 +268,19 @@ class _TaskFormPageState extends State<TaskFormPage> {
           },
         ),
         const SizedBox(height: 32),
-        AppButton(label: _busy ? 'Menyimpan...' : 'Simpan tugas', onPressed: _busy ? null : _save),
+        AppButton(label: _busy ? context.s.saving : context.s.saveTask, onPressed: _busy ? null : _save),
         FormError(_error),
         if (task != null) ...[
           const SizedBox(height: 16),
           AppButton(
-            label: task.isArchived ? 'Aktifkan lagi' : 'Arsipkan',
+            label: task.isArchived ? context.s.reactivate : context.s.archiveAction,
             icon: task.isArchived ? AppIcons.arrowCounterClockwise : AppIcons.archive,
             variant: AppButtonVariant.secondary,
             onPressed: _busy
                 ? null
                 : () => _run(() => _session.repository.setTaskArchived(task.id, archived: !task.isArchived)),
           ),
-          if (!task.isArchived) _Hint('Tugas yang diarsipkan hilang dari daftar anak, tapi riwayatnya tetap ada.'),
+          if (!task.isArchived) _Hint(context.s.archiveTaskHint),
         ],
       ],
     );
@@ -356,25 +357,6 @@ class _IconPicker extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onChanged;
 
-  static const _names = {
-    'bed': 'kasur',
-    'dish': 'piring',
-    'book': 'buku',
-    'pencil': 'pensil',
-    'broom': 'sapu',
-    'trophy': 'piala',
-    'tooth': 'gigi',
-    'dog': 'hewan peliharaan',
-    'plant': 'tanaman',
-    'basket': 'keranjang',
-    'shirt': 'baju',
-    'trash': 'sampah',
-    'bath': 'mandi',
-    'math': 'kalkulator',
-    'music': 'musik',
-    'run': 'olahraga',
-  };
-
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -383,7 +365,7 @@ class _IconPicker extends StatelessWidget {
       children: [
         for (final MapEntry(key: key, value: icon) in AppIcons.tasks.entries)
           Pressable(
-            semanticLabel: 'Ikon ${_names[key] ?? key}',
+            semanticLabel: context.s.iconSemantic(context.s.taskIconName(key)),
             selected: key == selected,
             onTap: () => onChanged(key),
             builder: (context, pressed) => Container(

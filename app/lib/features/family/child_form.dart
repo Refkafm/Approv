@@ -7,16 +7,19 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/member_avatar.dart';
 import '../../data/app_exception.dart';
+import '../../l10n/strings.dart';
 
 typedef ChildSubmit = Future<void> Function(String name, String avatar, DateTime? birthDate);
 
 /// Form tambah anak (PRD M-01): nama, avatar, tanggal lahir (opsional).
 /// Dipakai di onboarding dan tab Keluarga. Form dikosongkan setelah berhasil.
 class ChildForm extends StatefulWidget {
-  const ChildForm({super.key, required this.onSubmit, this.submitLabel = 'Tambah anak'});
+  const ChildForm({super.key, required this.onSubmit, this.submitLabel});
 
   final ChildSubmit onSubmit;
-  final String submitLabel;
+
+  /// Default: "Tambah anak".
+  final String? submitLabel;
 
   @override
   State<ChildForm> createState() => _ChildFormState();
@@ -42,7 +45,7 @@ class _ChildFormState extends State<ChildForm> {
       initialDate: _birthDate ?? DateTime(now.year - 10, now.month, now.day),
       firstDate: DateTime(now.year - 18),
       lastDate: now,
-      helpText: 'Tanggal lahir',
+      helpText: context.s.birthDateHelp,
     );
     if (picked != null) setState(() => _birthDate = picked);
   }
@@ -50,7 +53,7 @@ class _ChildFormState extends State<ChildForm> {
   Future<void> _submit() async {
     final name = _name.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Isi nama panggilan anak dulu ya.');
+      setState(() => _error = context.s.childNameRequired);
       return;
     }
     setState(() {
@@ -75,35 +78,32 @@ class _ChildFormState extends State<ChildForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppTextField(
-          label: 'Nama panggilan anak',
+          label: context.s.childNameLabel,
           controller: _name,
-          hint: 'mis. Raka',
+          hint: context.s.childNameHint,
           textCapitalization: TextCapitalization.words,
           maxLength: 40,
           errorText: _error,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
-        Text('Warna avatar', style: AppText.label),
+        Text(context.s.avatarColor, style: AppText.label),
         const SizedBox(height: 8),
         AvatarPicker(name: _name.text, selected: _avatar, onChanged: (key) => setState(() => _avatar = key)),
         const SizedBox(height: 16),
-        Text('Tanggal lahir (opsional)', style: AppText.label),
+        Text(context.s.birthDateOptional, style: AppText.label),
         const SizedBox(height: 4),
-        Text(
-          'Dipakai untuk menyarankan template poin sesuai usia.',
-          style: AppText.bodySm.copyWith(color: AppColors.inkMuted),
-        ),
+        Text(context.s.birthDateUse, style: AppText.bodySm.copyWith(color: AppColors.inkMuted)),
         const SizedBox(height: 8),
         AppButton(
-          label: _birthDate == null ? 'Pilih tanggal' : formatDateShort(_birthDate!),
+          label: _birthDate == null ? context.s.pickDate : formatDateShort(_birthDate!),
           variant: AppButtonVariant.secondary,
           expand: false,
           onPressed: _pickDate,
         ),
         const SizedBox(height: 20),
         AppButton(
-          label: _busy ? 'Menyimpan...' : widget.submitLabel,
+          label: _busy ? context.s.saving : (widget.submitLabel ?? context.s.addChild),
           variant: AppButtonVariant.secondary,
           onPressed: _busy ? null : _submit,
         ),

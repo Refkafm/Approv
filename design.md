@@ -240,7 +240,7 @@ Struktur: judul `title-lg` + deskripsi `body` + aksi icon button di kanan atas +
 | Kartu | Warna | Teks | Isi |
 | --- | --- | --- | --- |
 | Tugas hari ini | `--tangerine` | `--ink` | 2–3 list row tugas + tombol (+) |
-| Goal saya | `--sunflower` | `--ink` | Avatar hadiah, angka `number-hero`, progress dot grid |
+| Goal saya | `--sunflower` | `--ink` | Avatar hadiah, angka `number-hero`, progress bar goal |
 | Persetujuan menunggu (orang tua) | `--sunflower` | `--ink` | Angka besar jumlah laporan + penukaran menunggu |
 | Keluarga | `--grape` | `--surface` | Ringkasan anggota, tombol ↗ |
 
@@ -248,13 +248,14 @@ Struktur: judul `title-lg` + deskripsi `body` + aksi icon button di kanan atas +
 
 Pill putih, outline 2px, tinggi 64. Kiri: avatar/ikon bulat 44px. Tengah: judul `title-md` + subjudul `body-sm` terpotong satu baris. Kanan: waktu atau chevron `>`.
 
-### 7.5 Progress dot grid (goal)
+### 7.5 Progress bar goal
 
-Visualisasi khas pengganti progress bar:
-- Selalu **20 lingkaran**, masing-masing mewakili 5% dari harga goal, apa pun harganya. Pembulatan ke bawah, jadi lingkaran terakhir baru terisi saat poin benar-benar cukup.
-- Grid lingkaran 18px, jarak 6px, membentuk "tangga" naik ke kanan.
-- Di kartu `--sunflower`: lingkaran terisi `--ink` solid = poin terkumpul; lingkaran outline `--ink` 2px = sisa.
-- Di sebelahnya angka besar, mis. **64%** atau **3.200 / 5.000**, plus estimasi hari (PRD G-02), mis. "±6 hari lagi".
+Pill tebal yang mudah dibaca anak sekilas:
+- Track putih, outline `--ink` 2px, tinggi 32, sudut pill, hard shadow `sm`.
+- Isian dari kiri: `--tangerine` selama menabung, `--matcha` saat poin cukup. Ujung isian bergaris `--ink` 2px.
+- Garis tipis `--line-soft` di 25%, 50%, 75% sebagai patokan, dan ikon bendera di ujung kanan sebagai garis finish.
+- Di atasnya: persen besar `number-hero` (mis. **64%**) dan **3.200 / 5.000** rata kanan. Tanpa estimasi hari, supaya kartu ringkas; tinggi kartu mengikuti isinya.
+- Persen dibulatkan ke bawah, jadi 100% hanya saat poin benar-benar cukup.
 - Untuk pembaca layar, umumkan sebagai teks: "Goal Makan di Solaria, 3.200 dari 5.000 poin, 64 persen".
 
 ### 7.6 Dropdown pill
@@ -333,7 +334,7 @@ Latar `--surface`, garis atas 2px ink. Tab aktif: ikon di dalam pill `--sunflowe
 | Layar | Susunan |
 | --- | --- |
 | Onboarding | Logo kiri atas → judul `display-xl` + doodle → 2 kartu ilustrasi miring bertumpuk → pagination → tombol secondary "Masuk" → deskripsi kecil `ink-muted` |
-| Beranda anak | "Halo, Raka!" + ikon pengaturan → saldo hero → lingkaran kategori → kartu Goal (sunflower, dot grid) → kartu Tugas hari ini (tangerine) |
+| Beranda anak | "Halo, Raka!" + ikon pengaturan → saldo hero → lingkaran kategori → kartu Goal (sunflower, progress bar) → kartu Tugas hari ini (tangerine) |
 | Beranda orang tua | Sapaan → kartu ringkasan per anak (pill list row) → kartu Persetujuan menunggu (sunflower, angka besar) → kartu Keluarga (grape) |
 | Lapor tugas | Judul tugas → area kamera → kartu polaroid hasil foto → catatan → tombol primary "Kirim laporan" (non-aktif sampai jumlah foto minimal terpenuhi, dengan keterangan "Butuh 1 foto lagi") |
 | Detail persetujuan | Polaroid foto bukti besar (tekan untuk layar penuh) → info tugas → tiga tombol: Setujui (primary), Minta foto ulang (secondary), Tolak (destructive) → stempel muncul setelah aksi |
@@ -364,7 +365,7 @@ Keduanya memakai token, komponen, dan font yang sama.
 | Kartu muncul | Fade + naik 12px, berurutan 40ms | 220ms, ease-out |
 | Stempel status | Scale 1.4 → 0.95 → 1.0, rotasi −12° | 320ms, spring (damping tinggi) |
 | Poin bertambah | Angka count-up + bintang kecil melompat | 600ms |
-| Dot grid progress | Lingkaran terisi satu per satu | 30ms per dot |
+| Progress bar goal | Isian bergerak dari 0 ke posisi saat ini | 600ms, ease-out |
 | Goal tercapai | Confetti doodle (bintang, spiral, asterisk) | 1.2s |
 
 Hormati pengaturan "reduce motion": ganti semua dengan fade 150ms.
@@ -447,7 +448,6 @@ Hormati pengaturan "reduce motion": ganti semua dengan fade 150ms.
     "cardIn":   { "ms": 220, "easing": "easeOut", "stagger": 40, "rise": 12 },
     "stamp":    { "ms": 320, "easing": "spring", "scale": [1.4, 0.95, 1.0], "rotateDeg": -12 },
     "countUp":  { "ms": 600 },
-    "dotFill":  { "msPerDot": 30 },
     "confetti": { "ms": 1200 },
     "reduced":  { "ms": 150, "type": "fade" }
   }

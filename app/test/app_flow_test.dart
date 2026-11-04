@@ -2,7 +2,6 @@ import 'package:family_points/app.dart';
 import 'package:family_points/core/widgets/app_button.dart';
 import 'package:family_points/core/widgets/app_text_field.dart';
 import 'package:family_points/data/fake/fake_repository.dart';
-import 'package:family_points/data/app_exception.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -108,28 +107,44 @@ void main() {
     expect(find.text('Gabung keluarga'), findsOneWidget);
   });
 
-  testWidgets('orang tua: daftar dengan email, sandi salah ditolak saat masuk lagi', (tester) async {
+  testWidgets('orang tua: halaman Masuk dulu, daftar di halaman terpisah, lalu masuk lagi', (tester) async {
     final repo = FakeRepository();
     await _pumpApp(tester, repo);
 
     await _tap(tester, _button('Saya orang tua'));
+    expect(find.text('Masuk'), findsWidgets);
     expect(_button('Pakai nomor HP'), findsNothing);
     expect(_button('Lanjut dengan Apple'), findsNothing);
-    await _tap(tester, _button('Pakai email'));
 
+    await _tap(tester, _button('Daftar akun baru'));
+    expect(find.text('Daftar akun'), findsOneWidget);
     await _type(tester, 'Email', 'ibu@contoh');
     await _type(tester, 'Kata sandi', 'rahasia1');
+    await _type(tester, 'Ulangi kata sandi', 'rahasia1');
     await _tap(tester, _button('Daftar'));
     expect(find.text('Alamat email belum benar.'), findsOneWidget);
 
     await _type(tester, 'Email', 'ibu@contoh.com');
+    await _type(tester, 'Ulangi kata sandi', 'rahasia2');
+    await _tap(tester, _button('Daftar'));
+    expect(find.text('Kata sandi yang diulang tidak sama.'), findsOneWidget);
+
+    await _type(tester, 'Ulangi kata sandi', 'rahasia1');
     await _tap(tester, _button('Daftar'));
     expect(find.text('Buat keluarga'), findsOneWidget);
 
+    // Keluar, lalu masuk lewat halaman Masuk
     await repo.signOut();
-    await expectLater(repo.signInWithEmail('ibu@contoh.com', 'salah123'), throwsA(isA<AppException>()));
-    await repo.signInWithEmail('IBU@contoh.com', 'rahasia1');
-    expect((await repo.currentUser())!.isAnonymous, isFalse);
+    await tester.pumpAndSettle();
+    await _tap(tester, _button('Saya orang tua'));
+    await _type(tester, 'Email', 'ibu@contoh.com');
+    await _type(tester, 'Kata sandi', 'salah123');
+    await _tap(tester, _button('Masuk'));
+    expect(find.text('Email atau kata sandi salah.'), findsOneWidget);
+
+    await _type(tester, 'Kata sandi', 'rahasia1');
+    await _tap(tester, _button('Masuk'));
+    expect(find.text('Buat keluarga'), findsOneWidget);
   });
 
   testWidgets('keluar dari tab Keluarga kembali ke layar awal', (tester) async {

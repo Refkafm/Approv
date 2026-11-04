@@ -12,6 +12,8 @@ import '../../data/app_exception.dart';
 import '../../data/reward_models.dart';
 import '../shell/reload_on_changes.dart';
 import '../shell/session.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Daftar hadiah orang tua (PRD layar O-8): kelompok Instan & Goal, aktif/arsip.
 class RewardListPage extends StatefulWidget {
@@ -54,18 +56,18 @@ class _RewardListPageState extends State<RewardListPage> with ReloadOnChanges {
           final rewards = snapshot.data ?? const <Reward>[];
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-            children: [
+            children: staggered([
               Row(
                 children: [
-                  Expanded(child: Text('Hadiah', style: AppText.displayLg)),
-                  IconCircleButton(icon: AppIcons.plus, semanticLabel: 'Hadiah baru', onPressed: _open),
+                  Expanded(child: Text(context.s.rewards, style: AppText.displayLg)),
+                  IconCircleButton(icon: AppIcons.plus, semanticLabel: context.s.newReward, onPressed: _open),
                 ],
               ),
               const SizedBox(height: 16),
               ChipScroller(
                 children: [
                   PillChip(
-                    label: 'Aktif',
+                    label: context.s.activeFilter,
                     selected: !_archived,
                     onTap: () {
                       _archived = false;
@@ -73,7 +75,7 @@ class _RewardListPageState extends State<RewardListPage> with ReloadOnChanges {
                     },
                   ),
                   PillChip(
-                    label: 'Arsip',
+                    label: context.s.archivedFilter,
                     selected: _archived,
                     onTap: () {
                       _archived = true;
@@ -85,17 +87,19 @@ class _RewardListPageState extends State<RewardListPage> with ReloadOnChanges {
               const SizedBox(height: 20),
               if (snapshot.hasError)
                 Text(
-                  snapshot.error is AppException ? (snapshot.error! as AppException).message : 'Gagal memuat hadiah.',
+                  snapshot.error is AppException
+                      ? (snapshot.error! as AppException).message
+                      : context.s.loadRewardsFailed,
                   style: AppText.body.copyWith(color: AppColors.tangerineDeep),
                 )
               else if (snapshot.connectionState == ConnectionState.done && rewards.isEmpty)
                 Text(
-                  _archived ? 'Tidak ada hadiah di arsip.' : 'Belum ada hadiah. Tekan + untuk membuat.',
+                  _archived ? context.s.noArchivedRewards : context.s.noRewardsYet,
                   style: AppText.body.copyWith(color: AppColors.inkMuted),
                 ),
               for (final type in RewardType.values)
                 if (rewards.any((r) => r.type == type)) ...[
-                  Text(type == RewardType.instant ? 'Instan' : 'Goal', style: AppText.titleLg),
+                  Text(type == RewardType.instant ? context.s.rewardInstant : context.s.goal, style: AppText.titleLg),
                   const SizedBox(height: 10),
                   for (final r in rewards.where((r) => r.type == type)) ...[
                     ListRowPill(
@@ -103,7 +107,7 @@ class _RewardListPageState extends State<RewardListPage> with ReloadOnChanges {
                       subtitle: [
                         r.rulesLabel,
                         if (r.pendingCost != null && r.costEffectiveAt != null)
-                          'naik jadi ${formatPoints(r.pendingCost!)} mulai ${formatDateShort(r.costEffectiveAt!)}',
+                          context.s.risesTo(formatPoints(r.pendingCost!), formatDateShort(r.costEffectiveAt!)),
                       ].join(' · '),
                       leading: CircleBadge(color: AppColors.pastelLilac, icon: AppIcons.reward(r.icon)),
                       trailing: Padding(
@@ -116,7 +120,7 @@ class _RewardListPageState extends State<RewardListPage> with ReloadOnChanges {
                   ],
                   const SizedBox(height: 14),
                 ],
-            ],
+            ]),
           );
         },
       ),

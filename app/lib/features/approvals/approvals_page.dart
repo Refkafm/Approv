@@ -13,6 +13,8 @@ import '../../data/submission_repository.dart';
 import '../shell/reload_on_changes.dart';
 import '../shell/session.dart';
 import 'redemption_sheet.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Antrean persetujuan (PRD layar O-4, L-03): laporan tugas yang menunggu, terlama di atas.
 /// Tab penukaran hadiah diisi di minggu 7; setujui banyak sekaligus (L-05, P1) menyusul.
@@ -61,18 +63,18 @@ class _ApprovalsPageState extends State<ApprovalsPage> with ReloadOnChanges {
           final items = snapshot.data ?? const <ReviewItem>[];
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-            children: [
-              Text('Persetujuan', style: AppText.displayLg),
+            children: staggered([
+              Text(context.s.navApprovals, style: AppText.displayLg),
               const SizedBox(height: 16),
               ChipScroller(
                 children: [
                   PillChip(
-                    label: items.isEmpty ? 'Laporan tugas' : 'Laporan tugas (${items.length})',
+                    label: items.isEmpty ? context.s.taskReports : context.s.taskReportsWithCount(items.length),
                     selected: !_rewardsTab,
                     onTap: () => setState(() => _rewardsTab = false),
                   ),
                   PillChip(
-                    label: 'Penukaran hadiah',
+                    label: context.s.rewardRedemptions,
                     selected: _rewardsTab,
                     onTap: () => setState(() => _rewardsTab = true),
                   ),
@@ -83,14 +85,13 @@ class _ApprovalsPageState extends State<ApprovalsPage> with ReloadOnChanges {
                 _RedemptionQueue(_redemptions)
               else if (snapshot.hasError)
                 Text(
-                  snapshot.error is AppException ? (snapshot.error! as AppException).message : 'Gagal memuat laporan.',
+                  snapshot.error is AppException
+                      ? (snapshot.error! as AppException).message
+                      : context.s.loadReportsFailed,
                   style: AppText.body.copyWith(color: AppColors.tangerineDeep),
                 )
               else if (snapshot.connectionState == ConnectionState.done && items.isEmpty)
-                Text(
-                  'Tidak ada laporan yang menunggu. Mantap!',
-                  style: AppText.body.copyWith(color: AppColors.inkMuted),
-                )
+                Text(context.s.noPendingReports, style: AppText.body.copyWith(color: AppColors.inkMuted))
               else
                 for (final item in items) ...[
                   ListRowPill(
@@ -98,7 +99,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> with ReloadOnChanges {
                     subtitle: [
                       item.memberName,
                       formatReportTime(item.createdAt),
-                      if (item.isFlagged) 'menunggu > 3 hari',
+                      if (item.isFlagged) context.s.waitingOver3Days,
                     ].join(' · '),
                     leading: MemberAvatar(name: item.memberName, avatarKey: item.memberAvatar),
                     trailing: Padding(
@@ -109,7 +110,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> with ReloadOnChanges {
                   ),
                   const SizedBox(height: 10),
                 ],
-            ],
+            ]),
           );
         },
       ),
@@ -130,7 +131,7 @@ class _RedemptionQueue extends StatelessWidget {
       builder: (context, snapshot) {
         final list = snapshot.data ?? const <Redemption>[];
         if (snapshot.connectionState == ConnectionState.done && list.isEmpty) {
-          return Text('Tidak ada penukaran yang menunggu.', style: AppText.body.copyWith(color: AppColors.inkMuted));
+          return Text(context.s.noPendingRedemptions, style: AppText.body.copyWith(color: AppColors.inkMuted));
         }
         return Column(
           children: [
@@ -139,7 +140,9 @@ class _RedemptionQueue extends StatelessWidget {
                 title: r.rewardTitle,
                 subtitle: [
                   r.memberName,
-                  r.status == RedemptionStatus.requested ? 'minta tukar' : 'disetujui, belum diberikan',
+                  r.status == RedemptionStatus.requested
+                      ? context.s.redemptionRequested
+                      : context.s.redemptionApprovedNotGiven,
                   formatReportTime(r.createdAt),
                 ].join(' · '),
                 leading: MemberAvatar(name: r.memberName, avatarKey: r.memberAvatar),

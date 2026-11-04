@@ -10,6 +10,8 @@ import '../../data/task_rules.dart';
 import '../shell/reload_on_changes.dart';
 import '../shell/session.dart';
 import 'report_sheet.dart';
+import '../../core/widgets/motion.dart';
+import '../../l10n/strings.dart';
 
 /// Daftar tugas anak (PRD layar A-3): tugas hari ini & statusnya. Ketuk tugas untuk melapor (A-4).
 /// Status ikut berubah saat orang tua menyetujui/menolak (realtime).
@@ -74,29 +76,26 @@ class _ChildTasksPageState extends State<ChildTasksPage> with ReloadOnChanges {
           backgroundColor: AppColors.sunflower,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
-            children: [
-              Text('Tugas hari ini', style: AppText.displayLg),
+            children: staggered([
+              Text(context.s.todayTasks, style: AppText.displayLg),
               const SizedBox(height: 8),
               if (snapshot.connectionState == ConnectionState.done && !snapshot.hasError)
                 Text(
                   today.isEmpty
-                      ? 'Belum ada tugas untukmu. Tanya orang tua ya.'
-                      : (remaining == 0
-                            ? 'Semua tugas hari ini beres. Keren!'
-                            : 'Tinggal $remaining tugas lagi, semangat!'),
+                      ? context.s.noTasksForYou
+                      : (remaining == 0 ? context.s.allTodayDone : context.s.tasksLeft(remaining)),
                   style: AppText.body.copyWith(color: AppColors.inkMuted),
                 ),
               if (snapshot.hasError)
                 Text(
-                  snapshot.error is AppException ? (snapshot.error! as AppException).message : 'Gagal memuat tugas.',
+                  snapshot.error is AppException
+                      ? (snapshot.error! as AppException).message
+                      : context.s.loadTasksFailed,
                   style: AppText.body.copyWith(color: AppColors.tangerineDeep),
                 ),
               if (queued.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                _Notice(
-                  '${queued.length} laporan menunggu sinyal. Dikirim otomatis saat HP online lagi.',
-                  onRetry: session.flushReports,
-                ),
+                _Notice(context.s.queuedReports(queued.length), onRetry: session.flushReports),
               ],
               if (dropped != null) ...[
                 const SizedBox(height: 12),
@@ -115,14 +114,14 @@ class _ChildTasksPageState extends State<ChildTasksPage> with ReloadOnChanges {
               ],
               if (otherDays.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text('Hari lain', style: AppText.titleLg),
+                Text(context.s.otherDays, style: AppText.titleLg),
                 const SizedBox(height: 10),
                 for (final item in otherDays) ...[
                   _TaskRow(item, queued: queued.contains(item.task.id)),
                   const SizedBox(height: 10),
                 ],
               ],
-            ],
+            ]),
           ),
         );
       },
@@ -149,8 +148,8 @@ class _Notice extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(text, style: AppText.body)),
-          if (onRetry != null) TextButton(onPressed: onRetry, child: const Text('Coba kirim')),
-          if (onClose != null) TextButton(onPressed: onClose, child: const Text('Tutup')),
+          if (onRetry != null) TextButton(onPressed: onRetry, child: Text(context.s.tryToSend)),
+          if (onClose != null) TextButton(onPressed: onClose, child: Text(context.s.close)),
         ],
       ),
     );
@@ -170,7 +169,7 @@ class _TaskRow extends StatelessWidget {
     final task = item.task;
     return ListRowPill(
       title: task.title,
-      subtitle: queued ? 'Menunggu sinyal' : item.statusLabel,
+      subtitle: queued ? context.s.waitingSignal : item.statusLabel,
       leading: CircleBadge(
         color: item.canReport && !queued ? AppColors.pastelPeach : AppColors.pastelLime,
         icon: AppIcons.task(task.icon),

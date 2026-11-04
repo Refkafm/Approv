@@ -14,6 +14,7 @@ import '../../data/app_exception.dart';
 import '../../data/reward_models.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
+import '../../l10n/strings.dart';
 
 /// Buat / ubah hadiah (PRD layar O-9, H-01, H-02, H-04, aturan bisnis 6).
 class RewardFormPage extends StatefulWidget {
@@ -97,13 +98,9 @@ class _RewardFormPageState extends State<RewardFormPage> {
           context: context,
           builder: (dialogContext) => AlertDialog(
             backgroundColor: AppColors.paper,
-            title: Text('Harga naik 7 hari lagi', style: AppText.titleLg),
-            content: Text(
-              'Hadiah ini sedang ditabung anak sebagai goal. Supaya adil, harga baru '
-              '${formatPoints(input.cost)} poin berlaku 7 hari lagi dan anak diberi tahu.',
-              style: AppText.body,
-            ),
-            actions: [AppButton(label: 'Oke', onPressed: () => Navigator.of(dialogContext).pop())],
+            title: Text(context.s.priceRiseTitle, style: AppText.titleLg),
+            content: Text(context.s.priceRiseBody(formatPoints(input.cost)), style: AppText.body),
+            actions: [AppButton(label: context.s.ok, onPressed: () => Navigator.of(dialogContext).pop())],
           ),
         );
       }
@@ -114,21 +111,21 @@ class _RewardFormPageState extends State<RewardFormPage> {
   Widget build(BuildContext context) {
     final reward = _reward;
     if (widget.isEdit && reward == null) {
-      return OnboardingScaffold(title: 'Hadiah tidak ditemukan', onBack: () => context.pop(), children: const []);
+      return OnboardingScaffold(title: context.s.rewardNotFound, onBack: () => context.pop(), children: const []);
     }
     return OnboardingScaffold(
-      title: reward == null ? 'Hadiah baru' : 'Ubah hadiah',
+      title: reward == null ? context.s.newReward : context.s.editReward,
       onBack: _busy ? null : () => context.pop(),
       children: [
         AppTextField(
-          label: 'Nama hadiah',
+          label: context.s.rewardNameLabel,
           controller: _title,
-          hint: 'mis. 30 menit main game',
+          hint: context.s.rewardNameHint,
           textCapitalization: TextCapitalization.sentences,
           maxLength: 60,
         ),
         const SizedBox(height: 20),
-        Text('Ikon', style: AppText.label),
+        Text(context.s.iconLabel, style: AppText.label),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -136,7 +133,7 @@ class _RewardFormPageState extends State<RewardFormPage> {
           children: [
             for (final MapEntry(key: key, value: icon) in AppIcons.rewards.entries)
               Pressable(
-                semanticLabel: 'Ikon $key',
+                semanticLabel: context.s.iconSemantic(key),
                 selected: key == _icon,
                 onTap: () => setState(() => _icon = key),
                 builder: (context, pressed) => Container(
@@ -156,7 +153,7 @@ class _RewardFormPageState extends State<RewardFormPage> {
         ),
         const SizedBox(height: 20),
         AppTextField(
-          label: 'Harga (poin)',
+          label: context.s.priceInPoints,
           controller: _cost,
           hint: '100',
           keyboardType: TextInputType.number,
@@ -165,50 +162,45 @@ class _RewardFormPageState extends State<RewardFormPage> {
         ),
         if (reward?.pendingCost != null && reward?.costEffectiveAt != null)
           _Hint(
-            'Kenaikan ke ${formatPoints(reward!.pendingCost!)} poin berlaku '
-            '${formatDateShort(reward.costEffectiveAt!)}.',
+            context.s.pendingPriceHint(formatPoints(reward!.pendingCost!), formatDateShort(reward.costEffectiveAt!)),
           ),
         if (reward == null) ...[
           const SizedBox(height: 24),
-          Text('Jenis', style: AppText.label),
+          Text(context.s.typeLabel, style: AppText.label),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
               for (final t in RewardType.values)
                 PillChip(
-                  label: t == RewardType.instant ? 'Instan (screen time & hal kecil)' : 'Goal (ditabung)',
+                  label: t == RewardType.instant ? context.s.instantTypeLabel : context.s.rewardGoalSaved,
                   selected: _type == t,
                   onTap: () => setState(() => _type = t),
                 ),
             ],
           ),
-          _Hint(
-            _type == RewardType.instant
-                ? 'Anak menukar kapan saja poinnya cukup, sesuai batas harian.'
-                : 'Anak menabung dan melihat progressnya sampai poinnya cukup.',
-          ),
+          _Hint(_type == RewardType.instant ? context.s.instantTypeHint : context.s.goalTypeHint),
         ],
         if (_type == RewardType.instant) ...[
           const SizedBox(height: 20),
           AppTextField(
-            label: 'Durasi screen time (menit, opsional)',
+            label: context.s.screenTimeDuration,
             controller: _duration,
             hint: '30',
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             maxLength: 4,
           ),
-          const _Hint('Bila diisi, timer sesi berjalan di HP anak setelah disetujui.'),
+          _Hint(context.s.screenTimeDurationHint),
           const SizedBox(height: 20),
-          Text('Maks per hari', style: AppText.label),
+          Text(context.s.maxPerDayShort, style: AppText.label),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
               for (final n in const [null, 1, 2, 3])
                 PillChip(
-                  label: n == null ? 'Tanpa batas' : '$n×',
+                  label: n == null ? context.s.noLimit : '$n×',
                   selected: _maxPerDay == n,
                   onTap: () => setState(() => _maxPerDay = n),
                 ),
@@ -217,9 +209,9 @@ class _RewardFormPageState extends State<RewardFormPage> {
         ],
         const SizedBox(height: 20),
         AppTextField(
-          label: 'Stok (opsional)',
+          label: context.s.stockOptional,
           controller: _stock,
-          hint: 'Kosongkan bila tanpa batas',
+          hint: context.s.stockHint,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           maxLength: 4,
@@ -228,7 +220,7 @@ class _RewardFormPageState extends State<RewardFormPage> {
         MergeSemantics(
           child: Row(
             children: [
-              Expanded(child: Text('Perlu persetujuan orang tua', style: AppText.body)),
+              Expanded(child: Text(context.s.needsParentApproval, style: AppText.body)),
               Switch(
                 value: _needsApproval,
                 onChanged: (v) => setState(() => _needsApproval = v),
@@ -242,12 +234,12 @@ class _RewardFormPageState extends State<RewardFormPage> {
           ),
         ),
         const SizedBox(height: 28),
-        AppButton(label: _busy ? 'Menyimpan...' : 'Simpan hadiah', onPressed: _busy ? null : _save),
+        AppButton(label: _busy ? context.s.saving : context.s.saveReward, onPressed: _busy ? null : _save),
         FormError(_error),
         if (reward != null) ...[
           const SizedBox(height: 16),
           AppButton(
-            label: reward.isArchived ? 'Aktifkan lagi' : 'Arsipkan',
+            label: reward.isArchived ? context.s.reactivate : context.s.archiveAction,
             icon: reward.isArchived ? AppIcons.arrowCounterClockwise : AppIcons.archive,
             variant: AppButtonVariant.secondary,
             onPressed: _busy

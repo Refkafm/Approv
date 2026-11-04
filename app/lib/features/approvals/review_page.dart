@@ -18,6 +18,7 @@ import '../../data/submission_repository.dart';
 import '../../data/task_models.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
+import '../../l10n/strings.dart';
 
 /// Detail laporan (PRD layar O-5, L-03, L-04, L-06, PF-05): setujui (+ bonus), tolak dengan alasan,
 /// atau minta foto ulang. Stempel muncul setelah aksi (design.md 8). Foto bukti tampil di minggu 5.
@@ -98,7 +99,7 @@ class _ReviewPageState extends State<ReviewPage> {
   Widget build(BuildContext context) {
     final item = widget.item;
     if (item == null) {
-      return OnboardingScaffold(title: 'Laporan tidak ditemukan', onBack: () => context.pop(), children: const []);
+      return OnboardingScaffold(title: context.s.reportNotFound, onBack: () => context.pop(), children: const []);
     }
 
     final result = _result;
@@ -116,7 +117,7 @@ class _ReviewPageState extends State<ReviewPage> {
                 children: [
                   Text(item.memberName, style: AppText.titleMd),
                   Text(
-                    'Dilaporkan ${formatReportTime(item.createdAt).toLowerCase()}',
+                    context.s.reportedAt(formatReportTime(item.createdAt).toLowerCase()),
                     style: AppText.bodySm.copyWith(color: AppColors.inkMuted),
                   ),
                 ],
@@ -139,7 +140,7 @@ class _ReviewPageState extends State<ReviewPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Catatan ${item.memberName}', style: AppText.label),
+                Text(context.s.noteFrom(item.memberName), style: AppText.label),
                 const SizedBox(height: 4),
                 Text(item.note!, style: AppText.body),
               ],
@@ -150,9 +151,9 @@ class _ReviewPageState extends State<ReviewPage> {
         if (result != null) ...[
           Center(child: StatusStamp(status: result, animate: true)),
           const SizedBox(height: 32),
-          AppButton(label: 'Kembali ke antrean', onPressed: () => context.pop()),
+          AppButton(label: context.s.backToQueue, onPressed: () => context.pop()),
         ] else ...[
-          Text('Bonus (opsional)', style: AppText.label),
+          Text(context.s.bonusOptional, style: AppText.label),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -160,7 +161,7 @@ class _ReviewPageState extends State<ReviewPage> {
             children: [
               for (final b in _bonusOptions)
                 PillChip(
-                  label: b == 0 ? 'Tanpa bonus' : '+$b',
+                  label: b == 0 ? context.s.noBonus : '+$b',
                   selected: _bonus == b,
                   onTap: _busy ? null : () => setState(() => _bonus = b),
                 ),
@@ -168,20 +169,20 @@ class _ReviewPageState extends State<ReviewPage> {
           ),
           const SizedBox(height: 24),
           AppButton(
-            label: _busy ? 'Menyimpan...' : (_bonus == 0 ? 'Setujui' : 'Setujui + bonus $_bonus'),
+            label: _busy ? context.s.saving : (_bonus == 0 ? context.s.approve : context.s.approveWithBonus(_bonus)),
             onPressed: _busy ? null : () => _review(ReviewAction.approve),
           ),
           if (item.verification == TaskVerification.photo) ...[
             const SizedBox(height: 12),
             AppButton(
-              label: 'Minta foto ulang',
+              label: context.s.askRetake,
               variant: AppButtonVariant.secondary,
               onPressed: _busy ? null : () => _askReason(ReviewAction.retake),
             ),
           ],
           const SizedBox(height: 12),
           AppButton(
-            label: 'Tolak',
+            label: context.s.reject,
             variant: AppButtonVariant.destructive,
             onPressed: _busy ? null : () => _askReason(ReviewAction.reject),
           ),
@@ -207,8 +208,8 @@ class _ReasonSheetState extends State<_ReasonSheet> {
   String? _error;
 
   List<String> get _quick => widget.retake
-      ? const ['Fotonya buram', 'Hasilnya tidak kelihatan']
-      : const ['Belum selesai', 'Kurang rapi', 'Belum sesuai permintaan'];
+      ? [context.s.reasonPhotoBlurry, context.s.reasonResultNotVisible]
+      : [context.s.reasonNotFinished, context.s.reasonNotTidy, context.s.reasonNotAsAsked];
 
   @override
   void dispose() {
@@ -219,7 +220,7 @@ class _ReasonSheetState extends State<_ReasonSheet> {
   void _submit() {
     final text = _reason.text.trim();
     if (!widget.retake && text.isEmpty) {
-      setState(() => _error = 'Tulis alasannya supaya anak tahu apa yang perlu diperbaiki.');
+      setState(() => _error = context.s.rejectReasonRequiredGeneric);
       return;
     }
     Navigator.of(context).pop(text);
@@ -238,12 +239,10 @@ class _ReasonSheetState extends State<_ReasonSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.retake ? 'Minta foto ulang' : 'Tolak laporan', style: AppText.titleLg),
+            Text(widget.retake ? context.s.askRetake : context.s.rejectReportTitle, style: AppText.titleLg),
             const SizedBox(height: 8),
             Text(
-              widget.retake
-                  ? 'Laporannya tetap jalan, anak cukup memotret ulang. Streak tidak putus.'
-                  : 'Anak akan melihat alasan ini dan bisa melapor ulang.',
+              widget.retake ? context.s.retakeExplain : context.s.rejectExplain,
               style: AppText.body.copyWith(color: AppColors.inkMuted),
             ),
             const SizedBox(height: 16),
@@ -257,9 +256,9 @@ class _ReasonSheetState extends State<_ReasonSheet> {
             ),
             const SizedBox(height: 16),
             AppTextField(
-              label: widget.retake ? 'Catatan (opsional)' : 'Alasan',
+              label: widget.retake ? context.s.noteOptional : context.s.reasonLabel,
               controller: _reason,
-              hint: widget.retake ? 'mis. Lantainya belum kelihatan' : 'mis. Lantainya masih kotor',
+              hint: widget.retake ? context.s.retakeNoteHint : context.s.rejectReasonHint,
               textCapitalization: TextCapitalization.sentences,
               maxLength: 200,
               maxLines: 2,
@@ -268,7 +267,7 @@ class _ReasonSheetState extends State<_ReasonSheet> {
             ),
             const SizedBox(height: 20),
             AppButton(
-              label: widget.retake ? 'Minta foto ulang' : 'Kirim penolakan',
+              label: widget.retake ? context.s.askRetake : context.s.sendRejection,
               variant: widget.retake ? AppButtonVariant.primary : AppButtonVariant.destructive,
               onPressed: _submit,
             ),
@@ -292,11 +291,11 @@ class _ProofPhotos extends StatelessWidget {
       future: photos,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Text('Foto tidak bisa dimuat.', style: AppText.body.copyWith(color: AppColors.tangerineDeep));
+          return Text(context.s.photosLoadFailed, style: AppText.body.copyWith(color: AppColors.tangerineDeep));
         }
         final list = snapshot.data ?? const <ProofPhoto>[];
         if (snapshot.connectionState == ConnectionState.done && list.isEmpty) {
-          return Text('Tidak ada foto.', style: AppText.body.copyWith(color: AppColors.inkMuted));
+          return Text(context.s.noPhotos, style: AppText.body.copyWith(color: AppColors.inkMuted));
         }
         final images = [for (final p in list) repo.proofImage(p)];
         void open(int index) => showPhotoViewer(context, [
@@ -304,8 +303,8 @@ class _ProofPhotos extends StatelessWidget {
             ViewerPhoto(
               image: images[i],
               caption:
-                  'Diambil ${formatReportTime(p.takenAt).toLowerCase()}'
-                  '${p.origin == PhotoOrigin.gallery ? ' · dari galeri' : ''}',
+                  context.s.takenAt(formatReportTime(p.takenAt).toLowerCase()) +
+                  (p.origin == PhotoOrigin.gallery ? context.s.fromGallerySuffix : ''),
               label: p.kind.label,
             ),
         ], initial: index);
@@ -322,7 +321,7 @@ class _ProofPhotos extends StatelessWidget {
                   seed: i,
                   label: p.kind.label,
                   caption: formatReportTime(p.takenAt),
-                  semanticLabel: 'Foto bukti ${i + 1} dari ${list.length}, ketuk untuk memperbesar',
+                  semanticLabel: context.s.proofPhotoSemantic(i + 1, list.length),
                   onTap: () => open(i),
                 ),
               ),

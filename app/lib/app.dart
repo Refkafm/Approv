@@ -11,6 +11,8 @@ import 'core/theme/app_theme.dart';
 import 'data/app_repository.dart';
 import 'data/report_queue.dart';
 import 'features/shell/session.dart';
+import 'l10n/language_store.dart';
+import 'l10n/strings.dart';
 import 'router.dart';
 
 class FamilyPointsApp extends StatefulWidget {
@@ -21,6 +23,7 @@ class FamilyPointsApp extends StatefulWidget {
     this.push,
     this.analytics,
     this.reportStore,
+    this.languageStore,
   });
 
   final AppRepository repository;
@@ -37,6 +40,9 @@ class FamilyPointsApp extends StatefulWidget {
   /// Penyimpanan antrean laporan offline; default di memori.
   final ReportQueueStore? reportStore;
 
+  /// Bahasa terakhir di HP ini; default di memori.
+  final LanguageStore? languageStore;
+
   @override
   State<FamilyPointsApp> createState() => _FamilyPointsAppState();
 }
@@ -47,6 +53,7 @@ class _FamilyPointsAppState extends State<FamilyPointsApp> {
     push: widget.push ?? const NoopPushService(),
     analytics: widget.analytics ?? const NoopAnalytics(),
     reportStore: widget.reportStore,
+    languageStore: widget.languageStore,
   )..start();
   late final GoRouter _router = buildRouter(_session);
   late final PhotoPicker _photoPicker = widget.photoPicker ?? DevicePhotoPicker();
@@ -73,14 +80,17 @@ class _FamilyPointsAppState extends State<FamilyPointsApp> {
       controller: _session,
       child: PhotoPickerScope(
         picker: _photoPicker,
-        child: MaterialApp.router(
-          title: 'Family Points',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(),
-          routerConfig: _router,
-          locale: const Locale('id'),
-          supportedLocales: const [Locale('id'), Locale('en')],
-          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        child: ListenableBuilder(
+          listenable: _session,
+          builder: (context, _) => MaterialApp.router(
+            title: 'Family Points',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            routerConfig: _router,
+            locale: Locale(_session.language),
+            supportedLocales: S.supportedLocales,
+            localizationsDelegates: const [S.delegate, ...GlobalMaterialLocalizations.delegates],
+          ),
         ),
       ),
     );
