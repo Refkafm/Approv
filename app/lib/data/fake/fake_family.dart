@@ -17,6 +17,20 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   Future<void> signInWithGoogle() async => _signIn(anonymous: false, email: 'demo@gmail.com', provider: 'google');
 
   @override
+  Future<bool> linkGoogle() async {
+    final user = _requireUser();
+    _user = AuthUser(
+      id: user.id,
+      isAnonymous: false,
+      email: user.email,
+      provider: user.provider,
+      linkedProviders: {...user.linkedProviders, 'google'}.toList(),
+    );
+    _auth.add(null);
+    return true;
+  }
+
+  @override
   Future<void> signInWithApple() async => _signIn(anonymous: false);
 
   @override

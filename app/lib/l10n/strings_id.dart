@@ -1196,6 +1196,21 @@ class SId extends S {
   String get signedInWithEmail => 'Masuk dengan email';
 
   @override
+  String get linkGoogle => 'Hubungkan Google';
+
+  @override
+  String get linkGoogleHint => 'Agar bisa masuk ke keluarga ini dengan Google juga, tanpa kata sandi.';
+
+  @override
+  String get googleLinked => 'Google terhubung: bisa masuk dengan email atau Google';
+
+  @override
+  String signedInAs(String email) => 'Masuk sebagai $email';
+
+  @override
+  String get wrongAccountHint => 'Sudah punya keluarga dengan akun lain? Keluar, lalu masuk dengan akun itu.';
+
+  @override
   String get freqOnce => 'Sekali';
 
   @override

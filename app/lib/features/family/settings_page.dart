@@ -215,27 +215,71 @@ class _SettingsPageState extends State<SettingsPage> {
 }
 
 /// Email akun yang sedang masuk dan cara masuknya.
-class _AccountRow extends StatelessWidget {
+class _AccountRow extends StatefulWidget {
   const _AccountRow({required this.user});
 
   final AuthUser? user;
 
   @override
+  State<_AccountRow> createState() => _AccountRowState();
+}
+
+/// Email + cara masuk; akun email bisa dihubungkan ke Google agar keluarga yang sama terbuka lewat Google.
+class _AccountRowState extends State<_AccountRow> {
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _linkGoogle() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await SessionScope.read(context).repository.linkGoogle();
+    } on AppException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = widget.user;
     final google = user?.provider == 'google';
-    return ListRowPill(
-      title: user?.email ?? '-',
-      subtitle: google ? context.s.signedInWithGoogle : context.s.signedInWithEmail,
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.ink, width: AppStroke.width),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListRowPill(
+          title: user?.email ?? '-',
+          subtitle: google
+              ? context.s.signedInWithGoogle
+              : (user?.hasGoogle ?? false)
+              ? context.s.googleLinked
+              : context.s.signedInWithEmail,
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.ink, width: AppStroke.width),
+            ),
+            child: Icon(google ? AppIcons.googleLogo : AppIcons.envelope, size: 20, color: AppColors.ink),
+          ),
         ),
-        child: Icon(google ? AppIcons.googleLogo : AppIcons.envelope, size: 20, color: AppColors.ink),
-      ),
+        if (user != null && !user.hasGoogle) ...[
+          const SizedBox(height: 12),
+          AppButton(
+            label: _busy ? context.s.saving : context.s.linkGoogle,
+            icon: AppIcons.googleLogo,
+            variant: AppButtonVariant.secondary,
+            onPressed: _busy ? null : _linkGoogle,
+          ),
+          _Hint(context.s.linkGoogleHint),
+          FormError(_error),
+        ],
+      ],
     );
   }
 }

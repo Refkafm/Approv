@@ -411,6 +411,11 @@ abstract class S {
   String get accountLabel;
   String get signedInWithGoogle;
   String get signedInWithEmail;
+  String get linkGoogle;
+  String get linkGoogleHint;
+  String get googleLinked;
+  String signedInAs(String email);
+  String get wrongAccountHint;
   String get freqOnce;
   String get freqDaily;
   String get freqDaysOfWeek;

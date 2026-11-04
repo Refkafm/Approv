@@ -231,6 +231,36 @@ void main() {
     expect(find.text('Siapa yang pakai HP ini?'), findsOneWidget);
   });
 
+  testWidgets('akun email menghubungkan Google dari Pengaturan', (tester) async {
+    final repo = FakeRepository();
+    await repo.signUpWithEmail('ibu@contoh.com', 'rahasia1');
+    await repo.createFamily(familyName: 'Keluarga Rina', ownerName: 'Ibu Rina');
+    await _pumpApp(tester, repo);
+
+    await _tap(tester, find.bySemanticsLabel('Pengaturan'));
+    expect(find.text('Masuk dengan email'), findsOneWidget);
+    await _tap(tester, _button('Hubungkan Google'));
+
+    await tester.scrollUntilVisible(find.text('Akun'), -300, scrollable: find.byType(Scrollable).first);
+    expect(find.text('Google terhubung: bisa masuk dengan email atau Google'), findsOneWidget);
+    expect(_button('Hubungkan Google'), findsNothing);
+    expect((await repo.currentUser())!.hasGoogle, isTrue);
+  });
+
+  testWidgets('layar Buat keluarga menunjukkan akun yang sedang dipakai', (tester) async {
+    final repo = FakeRepository();
+    await repo.signInWithGoogle();
+    await _pumpApp(tester, repo);
+
+    expect(find.text('Buat keluarga'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Masuk sebagai demo@gmail.com'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Masuk sebagai demo@gmail.com'), findsOneWidget);
+  });
+
   testWidgets('tab Keluarga: anak baru langsung muncul setelah disimpan', (tester) async {
     final repo = FakeRepository();
     await repo.signInWithGoogle();

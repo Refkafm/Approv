@@ -15,6 +15,7 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
       isAnonymous: user.isAnonymous,
       email: user.email,
       provider: user.appMetadata['provider'] as String?,
+      linkedProviders: [for (final i in user.identities ?? const <UserIdentity>[]) i.provider],
     );
   }
 
@@ -33,6 +34,35 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
       await _client.auth.signInWithOAuth(OAuthProvider.google, redirectTo: AppConfig.authRedirectUrl);
       return;
     }
+    final idToken = await _googleIdToken();
+    if (idToken == null) return;
+    try {
+      await _client.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken, nonce: _googleNonce);
+    } on AuthException catch (e) {
+      debugPrint('google sign-in: supabase ${e.statusCode} ${e.code} ${e.message}');
+      throw AppException('auth_failed', detail: e.message);
+    }
+  });
+
+  @override
+  Future<bool> linkGoogle() => _guard(() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      return _client.auth.linkIdentity(OAuthProvider.google, redirectTo: AppConfig.authRedirectUrl);
+    }
+    final idToken = await _googleIdToken();
+    if (idToken == null) return false;
+    try {
+      await _client.auth.linkIdentityWithIdToken(provider: OAuthProvider.google, idToken: idToken, nonce: _googleNonce);
+      return true;
+    } on AuthException catch (e) {
+      debugPrint('google link: supabase ${e.statusCode} ${e.code} ${e.message}');
+      if (e.code == 'identity_already_exists') throw const AppException('identity_taken');
+      throw AppException('auth_failed', detail: e.message);
+    }
+  });
+
+  /// Lembar akun Google native (iOS) → id_token berisi hash [_googleNonce]; null bila ditutup pengguna.
+  Future<String?> _googleIdToken() async {
     final google = GoogleSignIn.instance;
     await (_googleInit ??= google.initialize(
       clientId: AppConfig.googleIosClientId,
@@ -44,7 +74,7 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
       account = await google.authenticate();
     } on GoogleSignInException catch (e) {
       // Ditutup sendiri oleh pengguna: bukan error
-      if (e.code == GoogleSignInExceptionCode.canceled) return;
+      if (e.code == GoogleSignInExceptionCode.canceled) return null;
       debugPrint('google sign-in: ${e.code} ${e.description}');
       throw AppException('auth_failed', detail: '${e.code}');
     }
@@ -53,13 +83,8 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
       debugPrint('google sign-in: tanpa idToken');
       throw const AppException('auth_failed', detail: 'no_id_token');
     }
-    try {
-      await _client.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken, nonce: _googleNonce);
-    } on AuthException catch (e) {
-      debugPrint('google sign-in: supabase ${e.statusCode} ${e.code} ${e.message}');
-      throw AppException('auth_failed', detail: e.message);
-    }
-  });
+    return idToken;
+  }
 
   @override
   Future<void> signInWithApple() =>

@@ -172,6 +172,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
             variant: AppButtonVariant.secondary,
             onPressed: _busy ? null : () => context.go('/join'),
           ),
+          const SizedBox(height: 24),
+          // Akun yang sedang dipakai, agar tidak tak sengaja membuat keluarga kedua dengan akun lain
+          Text(context.s.signedInAs(_session.user?.email ?? '-'), style: AppText.label),
+          const SizedBox(height: 4),
+          Text(context.s.wrongAccountHint, style: AppText.body),
           const SizedBox(height: 12),
           AppButton(
             label: context.s.signOut,

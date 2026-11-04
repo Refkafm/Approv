@@ -9,6 +9,10 @@ abstract interface class FamilyRepository {
   Future<AuthUser?> currentUser();
 
   Future<void> signInWithGoogle();
+
+  /// Hubungkan Google ke akun yang sedang masuk (manual linking), agar keluarga yang sama
+  /// bisa dibuka lewat Google. false bila pengguna menutup lembar Google.
+  Future<bool> linkGoogle();
   Future<void> signInWithApple();
 
   /// Masuk dengan email & kata sandi yang sudah terdaftar.

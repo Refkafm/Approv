@@ -1201,6 +1201,21 @@ class SEn extends S {
   String get signedInWithEmail => 'Signed in with email';
 
   @override
+  String get linkGoogle => 'Link Google';
+
+  @override
+  String get linkGoogleHint => 'So you can also sign in to this family with Google, without a password.';
+
+  @override
+  String get googleLinked => 'Google linked: sign in with email or Google';
+
+  @override
+  String signedInAs(String email) => 'Signed in as $email';
+
+  @override
+  String get wrongAccountHint => 'Already have a family on another account? Sign out, then sign in with that account.';
+
+  @override
   String get freqOnce => 'Once';
 
   @override
