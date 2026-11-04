@@ -69,11 +69,9 @@ void main() {
     expect(back.toRow(), s.toRow());
   });
 
-  testWidgets('orang tua mengganti nama, zona waktu & bonus streak dari layar Keluarga', (tester) async {
+  testWidgets('orang tua mengganti nama, zona waktu & bonus streak dari gear di Beranda', (tester) async {
     repo.debugSetUser(parentId);
     await tester.pumpWidget(FamilyPointsApp(repository: repo));
-    await tester.pumpAndSettle();
-    await tester.tap(find.bySemanticsLabel('Keluarga').last);
     await tester.pumpAndSettle();
     await _tap(tester, find.bySemanticsLabel('Pengaturan'));
     // Bagian akun: email & cara masuk

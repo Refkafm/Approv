@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/theme/typography.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/icon_circle_button.dart';
 import '../../core/widgets/invite_code_card.dart';
 import '../../core/widgets/list_row_pill.dart';
 import '../../core/widgets/member_avatar.dart';
@@ -137,16 +135,7 @@ class _FamilyPageState extends State<FamilyPage> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
             children: staggered([
-              Row(
-                children: [
-                  Expanded(child: Text(context.s.navFamily, style: AppText.displayLg)),
-                  IconCircleButton(
-                    icon: AppIcons.gear,
-                    semanticLabel: context.s.settings,
-                    onPressed: () => context.push('/parent/family/settings'),
-                  ),
-                ],
-              ),
+              Text(context.s.navFamily, style: AppText.displayLg),
               const SizedBox(height: 20),
               if (snapshot.hasError)
                 Text(

@@ -38,8 +38,8 @@ class ParentHomePage extends StatelessWidget {
               ),
               IconCircleButton(
                 icon: AppIcons.gear,
-                semanticLabel: context.s.familySettingsLabel,
-                onPressed: () => context.go('/parent/family'),
+                semanticLabel: context.s.settings,
+                onPressed: () => context.push('/parent/home/settings'),
               ),
             ],
           ),

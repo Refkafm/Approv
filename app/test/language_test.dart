@@ -62,8 +62,6 @@ void main() {
     expect(find.text('Approvals'), findsWidgets);
     expect(find.text('Persetujuan'), findsNothing);
 
-    await tester.tap(find.bySemanticsLabel('Family').last);
-    await tester.pumpAndSettle();
     await _tap(tester, find.bySemanticsLabel('Settings'));
     await _tap(tester, find.text('Bahasa Indonesia'));
     await _tap(tester, _button('Save'));

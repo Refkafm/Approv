@@ -89,6 +89,7 @@ GoRouter buildRouter(SessionController session) {
                     path: 'child',
                     builder: (context, state) => ChildDetailPage(member: state.extra as Member?),
                   ),
+                  GoRoute(path: 'settings', builder: (context, state) => const SettingsPage()),
                 ],
               ),
             ],
@@ -138,13 +139,7 @@ GoRouter buildRouter(SessionController session) {
             ],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/parent/family',
-                builder: (context, state) => const FamilyPage(),
-                routes: [GoRoute(path: 'settings', builder: (context, state) => const SettingsPage())],
-              ),
-            ],
+            routes: [GoRoute(path: '/parent/family', builder: (context, state) => const FamilyPage())],
           ),
         ],
       ),

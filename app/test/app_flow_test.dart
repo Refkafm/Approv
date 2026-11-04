@@ -208,18 +208,22 @@ void main() {
     await repo.signInWithEmail('ibu@contoh.com', 'baru123');
   });
 
-  testWidgets('Keluarga hanya berisi anggota; akun & tombol keluar ada di Pengaturan', (tester) async {
+  testWidgets('Keluarga hanya berisi anggota; Pengaturan (akun & keluar) dibuka dari gear di Beranda', (tester) async {
     final repo = FakeRepository();
     await repo.signInWithGoogle();
     await repo.createFamily(familyName: 'Keluarga Rina', ownerName: 'Ibu Rina');
     await _pumpApp(tester, repo);
 
-    await tester.tap(find.bySemanticsLabel('Keluarga & pengaturan'));
+    await tester.tap(find.bySemanticsLabel('Keluarga').last);
     await tester.pumpAndSettle();
     expect(find.text('Orang tua & pengasuh'), findsOneWidget);
+    expect(find.bySemanticsLabel('Pengaturan'), findsNothing);
     await tester.scrollUntilVisible(find.text('Ibu Rina'), 300, scrollable: find.byType(Scrollable).first);
     expect(_button('Keluar'), findsNothing);
 
+    // Pengaturan hanya dari ikon gear di Beranda, langsung ke halaman Pengaturan
+    await tester.tap(find.bySemanticsLabel('Beranda').last);
+    await tester.pumpAndSettle();
     await _tap(tester, find.bySemanticsLabel('Pengaturan'));
     expect(find.text('demo@gmail.com'), findsOneWidget);
     expect(find.text('Masuk dengan Google'), findsOneWidget);
@@ -233,7 +237,7 @@ void main() {
     await repo.createFamily(familyName: 'Keluarga Rina', ownerName: 'Ibu Rina');
     await _pumpApp(tester, repo);
 
-    await tester.tap(find.bySemanticsLabel('Keluarga & pengaturan'));
+    await tester.tap(find.bySemanticsLabel('Keluarga').last);
     await tester.pumpAndSettle();
     expect(find.text('Belum ada anak.'), findsOneWidget);
 
