@@ -20,6 +20,8 @@ class AppException implements Exception {
       return who.isEmpty ? 'Laporan ini sudah diproses.' : 'Laporan ini sudah diproses oleh $who.';
     }
     final text = (en ? _messagesEn : _messages)[code];
+    // Login gagal: sertakan penyebab teknis (mis. dari Google/Supabase) agar bisa dilacak
+    if (code == 'auth_failed' && detail != null && detail!.isNotEmpty) return '$text\n($detail)';
     return text ?? (en ? 'Something went wrong. Please try again.' : 'Ada yang tidak beres. Coba lagi ya.');
   }
 

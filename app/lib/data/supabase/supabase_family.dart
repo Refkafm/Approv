@@ -14,6 +14,10 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
 
   Future<void>? _googleInit;
 
+  /// Nonce asli untuk Supabase; Google menerima hash SHA-256-nya dan menaruhnya di id_token.
+  /// GoogleSignIn hanya bisa di-initialize sekali, jadi satu nonce per app dibuka.
+  late final String _googleNonce = base64UrlEncode(List.generate(32, (_) => Random.secure().nextInt(256)));
+
   // iOS: lembar akun Google native (tanpa browser & alamat supabase.co), token ditukar jadi sesi Supabase.
   // Platform lain & Apple: OAuth di browser; sesi masuk lewat deep link [AppConfig.authRedirectUrl]
   // dan diumumkan oleh [authChanges].
@@ -27,6 +31,7 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
     await (_googleInit ??= google.initialize(
       clientId: AppConfig.googleIosClientId,
       serverClientId: AppConfig.googleWebClientId,
+      nonce: sha256.convert(utf8.encode(_googleNonce)).toString(),
     ));
     final GoogleSignInAccount account;
     try {
@@ -34,11 +39,20 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
     } on GoogleSignInException catch (e) {
       // Ditutup sendiri oleh pengguna: bukan error
       if (e.code == GoogleSignInExceptionCode.canceled) return;
-      throw const AppException('auth_failed');
+      debugPrint('google sign-in: ${e.code} ${e.description}');
+      throw AppException('auth_failed', detail: '${e.code}');
     }
     final idToken = account.authentication.idToken;
-    if (idToken == null) throw const AppException('auth_failed');
-    await _client.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken);
+    if (idToken == null) {
+      debugPrint('google sign-in: tanpa idToken');
+      throw const AppException('auth_failed', detail: 'no_id_token');
+    }
+    try {
+      await _client.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken, nonce: _googleNonce);
+    } on AuthException catch (e) {
+      debugPrint('google sign-in: supabase ${e.statusCode} ${e.code} ${e.message}');
+      throw AppException('auth_failed', detail: e.message);
+    }
   });
 
   @override
