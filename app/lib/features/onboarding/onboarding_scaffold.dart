@@ -8,6 +8,7 @@ import '../../core/widgets/paper_background.dart';
 import '../../core/widgets/step_dots.dart';
 import '../../core/widgets/motion.dart';
 import '../../l10n/strings.dart';
+import 'language_button.dart';
 
 /// Kerangka layar onboarding: tombol kembali opsional, indikator langkah, judul display, isi.
 class OnboardingScaffold extends StatelessWidget {
@@ -19,6 +20,7 @@ class OnboardingScaffold extends StatelessWidget {
     this.onBack,
     this.step,
     this.stepCount,
+    this.showLanguage = false,
   });
 
   final String title;
@@ -27,6 +29,9 @@ class OnboardingScaffold extends StatelessWidget {
   final VoidCallback? onBack;
   final int? step;
   final int? stepCount;
+
+  /// Tombol bola dunia (pilih bahasa) di kanan atas; untuk layar sebelum login.
+  final bool showLanguage;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +51,7 @@ class OnboardingScaffold extends StatelessWidget {
                       IconCircleButton(icon: AppIcons.arrowLeft, semanticLabel: context.s.back, onPressed: onBack),
                     const Spacer(),
                     if (step != null && stepCount != null) StepDots(count: stepCount!, index: step!),
+                    if (showLanguage) ...[const SizedBox(width: 8), const LanguageButton()],
                   ],
                 ),
               ),

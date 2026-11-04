@@ -302,6 +302,12 @@ class SEn extends S {
   String demoResetCode(String code) => 'Demo mode: the code is always $code.';
 
   @override
+  String get chooseLanguage => 'Choose language';
+
+  @override
+  String get changeLanguage => 'Change language';
+
+  @override
   String get navHome => 'Home';
 
   @override

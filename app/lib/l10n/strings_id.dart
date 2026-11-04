@@ -299,6 +299,12 @@ class SId extends S {
   String demoResetCode(String code) => 'Mode demo: kodenya selalu $code.';
 
   @override
+  String get chooseLanguage => 'Pilih bahasa';
+
+  @override
+  String get changeLanguage => 'Ganti bahasa';
+
+  @override
   String get navHome => 'Beranda';
 
   @override

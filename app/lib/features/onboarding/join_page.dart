@@ -122,6 +122,7 @@ class _JoinPageState extends State<JoinPage> {
     return OnboardingScaffold(
       title: context.s.joinTitle,
       subtitle: isAdult ? context.s.joinSubtitleAdult : context.s.joinSubtitleChild,
+      showLanguage: true,
       step: isAdult ? null : 0,
       stepCount: isAdult ? null : 2,
       onBack: () => context.go(isAdult ? '/onboarding' : '/'),

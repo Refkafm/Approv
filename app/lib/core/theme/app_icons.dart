@@ -23,6 +23,7 @@ abstract final class AppIcons {
   static const clockCounterClockwise = IconData(0xe1a0, fontFamily: _bold, fontPackage: _pkg);
   static const envelope = IconData(0xe214, fontFamily: _bold, fontPackage: _pkg);
   static const flag = IconData(0xe244, fontFamily: _bold, fontPackage: _pkg);
+  static const globe = IconData(0xe288, fontFamily: _bold, fontPackage: _pkg);
   static const gear = IconData(0xe270, fontFamily: _bold, fontPackage: _pkg);
   static const gift = IconData(0xe276, fontFamily: _bold, fontPackage: _pkg);
   static const hourglass = IconData(0xe2b2, fontFamily: _bold, fontPackage: _pkg);

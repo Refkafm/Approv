@@ -95,6 +95,7 @@ class _LoginPageState extends State<LoginPage> with _AuthForm {
     return OnboardingScaffold(
       title: context.s.signIn,
       subtitle: context.s.loginSubtitle,
+      showLanguage: true,
       onBack: () => context.go('/'),
       children: [
         AppTextField(
@@ -258,6 +259,7 @@ class _RegisterPageState extends State<RegisterPage> with _AuthForm {
     return OnboardingScaffold(
       title: context.s.registerTitle,
       subtitle: context.s.registerSubtitle,
+      showLanguage: true,
       onBack: _back,
       children: [
         AppTextField(
@@ -376,6 +378,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> with _AuthForm 
     return OnboardingScaffold(
       title: codeStep ? context.s.resetCodeTitle : context.s.resetTitle,
       subtitle: codeStep ? context.s.resetCodeSubtitle(_sentTo!) : context.s.resetSubtitle,
+      showLanguage: true,
       onBack: _back,
       children: [
         if (!codeStep) ...[

@@ -120,6 +120,8 @@ abstract class S {
   String get newPassword;
   String get saveNewPassword;
   String demoResetCode(String code);
+  String get chooseLanguage;
+  String get changeLanguage;
   String get navHome;
   String get navApprovals;
   String get navFamily;

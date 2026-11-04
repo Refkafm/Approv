@@ -32,8 +32,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Siapa yang pakai HP ini?'), findsOneWidget);
 
+    // Pilihan bahasa ada di balik tombol bola dunia di kanan atas
+    expect(find.text('English'), findsNothing);
+    await _tap(tester, find.bySemanticsLabel('Ganti bahasa: Bahasa Indonesia'));
+    expect(find.text('Pilih bahasa'), findsOneWidget);
     await _tap(tester, find.text('English'));
+    expect(find.text('Choose language'), findsNothing);
     expect(find.text('Who is using this phone?'), findsOneWidget);
+    expect(find.bySemanticsLabel('Change language: English'), findsOneWidget);
     expect(await store.load(), 'en');
 
     await _tap(tester, _button("I'm a parent"));
