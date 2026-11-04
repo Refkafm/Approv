@@ -308,6 +308,12 @@ class SEn extends S {
   String get changeLanguage => 'Change language';
 
   @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
   String get navHome => 'Home';
 
   @override

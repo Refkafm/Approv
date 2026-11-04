@@ -1,6 +1,7 @@
 import 'package:family_points/core/format.dart';
 import 'package:family_points/core/theme/app_theme.dart';
 import 'package:family_points/core/widgets/app_button.dart';
+import 'package:family_points/core/widgets/app_text_field.dart';
 import 'package:family_points/core/widgets/goal_progress_bar.dart';
 import 'package:family_points/core/widgets/points_balance.dart';
 import 'package:family_points/core/widgets/status_stamp.dart';
@@ -106,6 +107,30 @@ void main() {
       expect(find.text('-10'), findsOneWidget);
       expect(find.text('Tugas dibatalkan'), findsOneWidget);
       expect(find.text('Akan lunas otomatis dari poin berikutnya.'), findsOneWidget);
+    });
+  });
+
+  group('AppTextField', () {
+    testWidgets('kata sandi tersembunyi; tombol mata menampilkan & menyembunyikan lagi', (tester) async {
+      final controller = TextEditingController(text: 'rahasia1');
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_wrap(AppTextField(label: 'Kata sandi', controller: controller, obscureText: true)));
+      bool obscured() => tester.widget<TextField>(find.byType(TextField)).obscureText;
+
+      expect(obscured(), isTrue);
+      await tester.tap(find.byTooltip('Tampilkan kata sandi'));
+      await tester.pump();
+      expect(obscured(), isFalse);
+      await tester.tap(find.byTooltip('Sembunyikan kata sandi'));
+      await tester.pump();
+      expect(obscured(), isTrue);
+    });
+
+    testWidgets('kolom biasa tidak punya tombol mata', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_wrap(AppTextField(label: 'Email', controller: controller)));
+      expect(find.byTooltip('Tampilkan kata sandi'), findsNothing);
     });
   });
 

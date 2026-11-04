@@ -22,6 +22,8 @@ abstract final class AppIcons {
   static const checkSquare = IconData(0xe186, fontFamily: _bold, fontPackage: _pkg);
   static const clockCounterClockwise = IconData(0xe1a0, fontFamily: _bold, fontPackage: _pkg);
   static const envelope = IconData(0xe214, fontFamily: _bold, fontPackage: _pkg);
+  static const eye = IconData(0xe220, fontFamily: _bold, fontPackage: _pkg);
+  static const eyeSlash = IconData(0xe224, fontFamily: _bold, fontPackage: _pkg);
   static const flag = IconData(0xe244, fontFamily: _bold, fontPackage: _pkg);
   static const globe = IconData(0xe288, fontFamily: _bold, fontPackage: _pkg);
   static const gear = IconData(0xe270, fontFamily: _bold, fontPackage: _pkg);

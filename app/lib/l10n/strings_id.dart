@@ -305,6 +305,12 @@ class SId extends S {
   String get changeLanguage => 'Ganti bahasa';
 
   @override
+  String get showPassword => 'Tampilkan kata sandi';
+
+  @override
+  String get hidePassword => 'Sembunyikan kata sandi';
+
+  @override
   String get navHome => 'Beranda';
 
   @override

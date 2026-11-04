@@ -122,6 +122,8 @@ abstract class S {
   String demoResetCode(String code);
   String get chooseLanguage;
   String get changeLanguage;
+  String get showPassword;
+  String get hidePassword;
   String get navHome;
   String get navApprovals;
   String get navFamily;
