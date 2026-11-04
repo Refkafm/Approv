@@ -80,6 +80,13 @@
 				<string>com.familypoints.app</string>
 			</array>
 		</dict>
+		<dict>
+			<!-- Login Google native: client ID iOS terbalik (AppConfig.googleIosClientId) -->
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.622357705333-skuaa3r5aqt6tnohqhhnh0246j58e01q</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

@@ -12,11 +12,34 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
     return user == null ? null : AuthUser(id: user.id, isAnonymous: user.isAnonymous);
   }
 
-  // Google & Apple lewat OAuth di browser; sesi masuk lewat deep link [AppConfig.authRedirectUrl]
-  // dan diumumkan oleh [authChanges]. Login native (google_sign_in / sign_in_with_apple) menyusul.
+  Future<void>? _googleInit;
+
+  // iOS: lembar akun Google native (tanpa browser & alamat supabase.co), token ditukar jadi sesi Supabase.
+  // Platform lain & Apple: OAuth di browser; sesi masuk lewat deep link [AppConfig.authRedirectUrl]
+  // dan diumumkan oleh [authChanges].
   @override
-  Future<void> signInWithGoogle() =>
-      _guard(() => _client.auth.signInWithOAuth(OAuthProvider.google, redirectTo: AppConfig.authRedirectUrl));
+  Future<void> signInWithGoogle() => _guard(() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      await _client.auth.signInWithOAuth(OAuthProvider.google, redirectTo: AppConfig.authRedirectUrl);
+      return;
+    }
+    final google = GoogleSignIn.instance;
+    await (_googleInit ??= google.initialize(
+      clientId: AppConfig.googleIosClientId,
+      serverClientId: AppConfig.googleWebClientId,
+    ));
+    final GoogleSignInAccount account;
+    try {
+      account = await google.authenticate();
+    } on GoogleSignInException catch (e) {
+      // Ditutup sendiri oleh pengguna: bukan error
+      if (e.code == GoogleSignInExceptionCode.canceled) return;
+      throw const AppException('auth_failed');
+    }
+    final idToken = account.authentication.idToken;
+    if (idToken == null) throw const AppException('auth_failed');
+    await _client.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken);
+  });
 
   @override
   Future<void> signInWithApple() =>
@@ -106,6 +129,14 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
     _familyChanges.clear();
     await _client.removeAllChannels();
     await _client.auth.signOut();
+    // Agar "Lanjut dengan Google" berikutnya menampilkan pilihan akun lagi
+    if (_googleInit != null) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } on GoogleSignInException catch (e) {
+        debugPrint('google signOut: $e');
+      }
+    }
   });
 
   @override
