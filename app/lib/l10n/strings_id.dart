@@ -268,7 +268,23 @@ class SId extends S {
   String get resetCodeTitle => 'Cek email kamu';
 
   @override
-  String resetCodeSubtitle(String email) => 'Kalau $email terdaftar, kode sudah dikirim ke sana. Cek juga folder spam.';
+  String resetCodeSubtitle(String email) =>
+      'Kalau $email terdaftar, kami kirim email berisi tautan. Buka email itu di HP ini, lalu ketuk tautannya. Cek juga folder spam.';
+
+  @override
+  String get haveResetCode => 'Emailnya berisi kode? Masukkan di sini';
+
+  @override
+  String get resendEmail => 'Kirim ulang email';
+
+  @override
+  String get demoOpenResetLink => 'Buka tautan dari email (demo)';
+
+  @override
+  String get newPasswordTitle => 'Buat kata sandi baru';
+
+  @override
+  String get newPasswordSubtitle => 'Kamu masuk lewat tautan dari email. Buat kata sandi baru untuk akun ini.';
 
   @override
   String get resetCodeLabel => 'Kode dari email';

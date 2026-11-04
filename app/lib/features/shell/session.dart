@@ -36,6 +36,7 @@ class SessionController extends ChangeNotifier {
   bool _disposed = false;
   String? _pushUserId;
   StreamSubscription<void>? _authSub;
+  StreamSubscription<void>? _recoverySub;
 
   final LanguageStore _languageStore;
   String _language = 'id';
@@ -67,6 +68,16 @@ class SessionController extends ChangeNotifier {
   /// Sedang di tengah alur bertahap (onboarding / gabung keluarga): router tidak memindahkan layar.
   bool get inFlow => _inFlow;
 
+  bool _recoveringPassword = false;
+
+  /// Masuk lewat tautan atur ulang kata sandi: router menahan di layar kata sandi baru.
+  bool get recoveringPassword => _recoveringPassword;
+
+  Future<void> finishPasswordRecovery() async {
+    _recoveringPassword = false;
+    await refresh();
+  }
+
   /// Profil aktif. Pilih profil + PIN di HP bersama (A-05) menyusul; sementara anggota pertama.
   Member? get activeMember => _memberships.isEmpty ? null : _memberships.first;
 
@@ -78,6 +89,10 @@ class SessionController extends ChangeNotifier {
 
   Future<void> start() async {
     _authSub ??= repository.authChanges.listen((_) => refresh());
+    _recoverySub ??= repository.passwordRecovery.listen((_) {
+      _recoveringPassword = true;
+      notifyListeners();
+    });
     _lifecycle ??= AppLifecycleListener(onResume: () => unawaited(flushReports()));
     _language = await _languageStore.load() ?? _language;
     await reports.load();
@@ -152,6 +167,7 @@ class SessionController extends ChangeNotifier {
 
   Future<void> signOut() async {
     _inFlow = false;
+    _recoveringPassword = false;
     await repository.signOut();
     await refresh();
   }
@@ -172,6 +188,7 @@ class SessionController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _authSub?.cancel();
+    _recoverySub?.cancel();
     _lifecycle?.dispose();
     _retryTimer?.cancel();
     reports.dispose();

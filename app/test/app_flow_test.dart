@@ -162,6 +162,7 @@ void main() {
     await _tap(tester, _button('Kirim kode'));
     expect(find.text('Cek email kamu'), findsOneWidget);
 
+    await _tap(tester, find.text('Emailnya berisi kode? Masukkan di sini'));
     await _type(tester, 'Kode dari email', '000000');
     await _type(tester, 'Kata sandi baru', 'baru123');
     await _type(tester, 'Ulangi kata sandi', 'baru123');
@@ -176,6 +177,35 @@ void main() {
     await repo.signOut();
     await expectLater(repo.signInWithEmail('ayah@contoh.com', 'lama123'), throwsA(anything));
     await repo.signInWithEmail('ayah@contoh.com', 'baru123');
+  });
+
+  testWidgets('orang tua: tautan atur ulang dari email membuka layar kata sandi baru', (tester) async {
+    final repo = FakeRepository();
+    await repo.signUpWithEmail('ibu@contoh.com', 'lama123');
+    await repo.signOut();
+    await _pumpApp(tester, repo);
+
+    await _tap(tester, _button('Saya orang tua'));
+    await _tap(tester, find.text('Lupa kata sandi?'));
+    await _type(tester, 'Email', 'ibu@contoh.com');
+    await _tap(tester, _button('Kirim kode'));
+
+    // Tautan di email diketuk di HP ini: sesi masuk, tapi router menahan di layar kata sandi baru
+    repo.debugOpenRecoveryLink('ibu@contoh.com');
+    await tester.pumpAndSettle();
+    expect(find.text('Buat kata sandi baru'), findsOneWidget);
+
+    await _type(tester, 'Kata sandi baru', 'baru123');
+    await _type(tester, 'Ulangi kata sandi', 'beda123');
+    await _tap(tester, _button('Simpan & masuk'));
+    expect(find.text('Kata sandi yang diulang tidak sama.'), findsOneWidget);
+
+    await _type(tester, 'Ulangi kata sandi', 'baru123');
+    await _tap(tester, _button('Simpan & masuk'));
+    expect(find.text('Buat keluarga'), findsOneWidget);
+
+    await repo.signOut();
+    await repo.signInWithEmail('ibu@contoh.com', 'baru123');
   });
 
   testWidgets('keluar dari tab Keluarga kembali ke layar awal', (tester) async {

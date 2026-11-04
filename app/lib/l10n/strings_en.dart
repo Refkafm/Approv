@@ -272,7 +272,22 @@ class SEn extends S {
 
   @override
   String resetCodeSubtitle(String email) =>
-      'If $email is registered, a code is on its way. Check your spam folder too.';
+      'If $email is registered, we sent an email with a link. Open it on this phone and tap the link. Check your spam folder too.';
+
+  @override
+  String get haveResetCode => 'Got a code in the email? Enter it here';
+
+  @override
+  String get resendEmail => 'Resend email';
+
+  @override
+  String get demoOpenResetLink => 'Open the email link (demo)';
+
+  @override
+  String get newPasswordTitle => 'Create a new password';
+
+  @override
+  String get newPasswordSubtitle => 'You signed in with the email link. Create a new password for this account.';
 
   @override
   String get resetCodeLabel => 'Code from email';

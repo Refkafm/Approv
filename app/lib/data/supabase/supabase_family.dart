@@ -39,6 +39,22 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
   Future<void> sendPasswordReset(String email) =>
       _guard(() => _emailAuth(() => _client.auth.resetPasswordForEmail(email, redirectTo: AppConfig.authRedirectUrl)));
 
+  // Tautan di email membuka app lewat deep link; supabase_flutter menukarnya jadi sesi dan
+  // mengumumkan passwordRecovery.
+  @override
+  Stream<void> get passwordRecovery =>
+      _client.auth.onAuthStateChange.where((state) => state.event == AuthChangeEvent.passwordRecovery).map((_) {});
+
+  @override
+  Future<void> updatePassword(String newPassword) => _guard(() async {
+    try {
+      await _emailAuth(() => _client.auth.updateUser(UserAttributes(password: newPassword)));
+    } on AppException catch (e) {
+      // Sama dengan kata sandi lama: tidak ada yang perlu diubah
+      if (e.code != 'same_password') rethrow;
+    }
+  });
+
   @override
   Future<void> resetPassword({required String email, required String code, required String newPassword}) =>
       _guard(() async {
@@ -47,12 +63,7 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
         } on AuthException {
           throw const AppException('invalid_otp');
         }
-        try {
-          await _emailAuth(() => _client.auth.updateUser(UserAttributes(password: newPassword)));
-        } on AppException catch (e) {
-          // Kata sandi baru sama dengan yang lama: tetap berhasil, sesi sudah masuk
-          if (e.code != 'same_password') rethrow;
-        }
+        await updatePassword(newPassword);
       });
 
   Future<T> _emailAuth<T>(Future<T> Function() run) async {

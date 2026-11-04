@@ -321,8 +321,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> with _AuthForm 
   final _password = TextEditingController();
   final _repeat = TextEditingController();
 
-  /// Email tujuan kode; terisi = langkah kedua.
+  /// Email tujuan tautan/kode; terisi = langkah kedua.
   String? _sentTo;
+
+  /// Template email bawaan Supabase hanya berisi tautan; kode dipakai bila templatenya memuat {{ .Token }}.
+  bool _codeMode = false;
 
   @override
   void dispose() {
@@ -337,6 +340,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> with _AuthForm 
     if (_sentTo != null) {
       setState(() {
         _sentTo = null;
+        _codeMode = false;
         error = null;
       });
     } else {
@@ -368,6 +372,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> with _AuthForm 
   @override
   Widget build(BuildContext context) {
     final codeStep = _sentTo != null;
+    final repo = SessionScope.of(context).repository;
     return OnboardingScaffold(
       title: codeStep ? context.s.resetCodeTitle : context.s.resetTitle,
       subtitle: codeStep ? context.s.resetCodeSubtitle(_sentTo!) : context.s.resetSubtitle,
@@ -384,6 +389,31 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> with _AuthForm 
           ),
           const SizedBox(height: 20),
           AppButton(label: busy ? context.s.sending : context.s.sendCode, onPressed: busy ? null : _send),
+        ] else if (!_codeMode) ...[
+          AppButton(
+            label: busy ? context.s.sending : context.s.resendEmail,
+            variant: AppButtonVariant.secondary,
+            onPressed: busy ? null : _send,
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
+              onPressed: busy ? null : () => setState(() => _codeMode = true),
+              style: TextButton.styleFrom(foregroundColor: AppColors.ink, minimumSize: const Size(48, 48)),
+              child: Text(
+                context.s.haveResetCode,
+                style: AppText.bodySm.copyWith(fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+              ),
+            ),
+          ),
+          if (repo is FakeRepository) ...[
+            const SizedBox(height: 8),
+            AppButton(
+              label: context.s.demoOpenResetLink,
+              variant: AppButtonVariant.secondary,
+              onPressed: () => repo.debugOpenRecoveryLink(_sentTo!),
+            ),
+          ],
         ] else ...[
           AppTextField(
             label: context.s.resetCodeLabel,
@@ -417,8 +447,63 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> with _AuthForm 
           AppButton(label: context.s.resendCode, variant: AppButtonVariant.secondary, onPressed: busy ? null : _send),
         ],
         FormError(error),
-        if (codeStep && SessionScope.of(context).repository is FakeRepository)
-          DemoNote(context.s.demoResetCode(FakeRepository.demoOtp)),
+        if (_codeMode && repo is FakeRepository) DemoNote(context.s.demoResetCode(FakeRepository.demoOtp)),
+      ],
+    );
+  }
+}
+
+/// Dibuka dari tautan atur ulang di email: sesi sudah masuk, tinggal membuat kata sandi baru.
+class NewPasswordPage extends StatefulWidget {
+  const NewPasswordPage({super.key});
+
+  @override
+  State<NewPasswordPage> createState() => _NewPasswordPageState();
+}
+
+class _NewPasswordPageState extends State<NewPasswordPage> with _AuthForm {
+  final _password = TextEditingController();
+  final _repeat = TextEditingController();
+
+  @override
+  void dispose() {
+    _password.dispose();
+    _repeat.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() => run(() async {
+    if (_password.text.length < 6) throw const AppException('weak_password');
+    if (_repeat.text != _password.text) throw const AppException('password_mismatch');
+    final session = SessionScope.read(context);
+    await session.repository.updatePassword(_password.text);
+    await session.finishPasswordRecovery();
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OnboardingScaffold(
+      title: context.s.newPasswordTitle,
+      subtitle: context.s.newPasswordSubtitle,
+      children: [
+        AppTextField(
+          label: context.s.newPassword,
+          controller: _password,
+          hint: context.s.passwordHint,
+          obscureText: true,
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 16),
+        AppTextField(
+          label: context.s.repeatPassword,
+          controller: _repeat,
+          obscureText: true,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _save(),
+        ),
+        const SizedBox(height: 20),
+        AppButton(label: busy ? context.s.saving : context.s.saveNewPassword, onPressed: busy ? null : _save),
+        FormError(error),
       ],
     );
   }

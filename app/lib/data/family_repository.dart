@@ -20,6 +20,12 @@ abstract interface class FamilyRepository {
   /// Mengirim kode atur ulang kata sandi ke email. Tidak memberi tahu apakah email terdaftar.
   Future<void> sendPasswordReset(String email);
 
+  /// Berbunyi saat app dibuka dari tautan atur ulang kata sandi di email (sesi sudah masuk).
+  Stream<void> get passwordRecovery;
+
+  /// Mengganti kata sandi akun yang sedang masuk.
+  Future<void> updatePassword(String newPassword);
+
   /// Memeriksa kode dari email, menyimpan kata sandi baru, lalu masuk.
   Future<void> resetPassword({required String email, required String code, required String newPassword});
 

@@ -111,6 +111,11 @@ abstract class S {
   String get resetSubtitle;
   String get resetCodeTitle;
   String resetCodeSubtitle(String email);
+  String get haveResetCode;
+  String get resendEmail;
+  String get demoOpenResetLink;
+  String get newPasswordTitle;
+  String get newPasswordSubtitle;
   String get resetCodeLabel;
   String get newPassword;
   String get saveNewPassword;

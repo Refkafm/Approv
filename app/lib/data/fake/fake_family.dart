@@ -39,6 +39,24 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   Future<void> sendPasswordReset(String email) async {}
 
   @override
+  Stream<void> get passwordRecovery => _recovery.stream;
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    _requireUser();
+    if (newPassword.length < 6) throw const AppException('weak_password');
+    final email = _recoveryEmail;
+    if (email != null) _emailAccounts[email] = newPassword;
+  }
+
+  /// Untuk tes & mode demo: seolah tautan atur ulang di email [email] diketuk di HP ini.
+  void debugOpenRecoveryLink(String email) {
+    _recoveryEmail = email.toLowerCase();
+    _recovery.add(null);
+    _signIn(anonymous: false);
+  }
+
+  @override
   Future<void> resetPassword({required String email, required String code, required String newPassword}) async {
     final key = email.toLowerCase();
     if (code != FakeRepository.demoOtp || !_emailAccounts.containsKey(key)) {

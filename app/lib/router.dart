@@ -40,6 +40,7 @@ GoRouter buildRouter(SessionController session) {
       final location = state.matchedLocation;
       if (location.startsWith('/dev')) return null;
       if (!session.ready) return location == '/splash' ? null : '/splash';
+      if (session.recoveringPassword) return location == '/new-password' ? null : '/new-password';
       if (session.inFlow) return null;
 
       final user = session.user;
@@ -70,6 +71,7 @@ GoRouter buildRouter(SessionController session) {
           ),
         ],
       ),
+      GoRoute(path: '/new-password', pageBuilder: (context, state) => fadeRisePage(state, const NewPasswordPage())),
       GoRoute(path: '/join', pageBuilder: (context, state) => fadeRisePage(state, const JoinPage())),
       GoRoute(path: '/onboarding', pageBuilder: (context, state) => fadeRisePage(state, const OnboardingPage())),
       GoRoute(path: '/dev/components', builder: (context, state) => const ComponentsPage()),

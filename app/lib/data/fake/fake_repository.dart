@@ -49,6 +49,7 @@ abstract class _FakeState {
   final DateTime Function() _clock;
   final Random _random;
   final _auth = StreamController<void>.broadcast();
+  final _recovery = StreamController<void>.broadcast();
 
   /// family id yang datanya berubah (meniru realtime Supabase)
   final _changes = StreamController<String>.broadcast();
@@ -56,6 +57,9 @@ abstract class _FakeState {
 
   AuthUser? _user;
   final _emailAccounts = <String, String>{};
+
+  /// Email akun yang masuk lewat tautan atur ulang kata sandi.
+  String? _recoveryEmail;
 
   /// Untuk tes: kirim laporan gagal seperti saat HP tanpa sinyal.
   bool debugOffline = false;
