@@ -1187,6 +1187,15 @@ class SId extends S {
   String get tapToUndo => 'ketuk untuk membatalkan';
 
   @override
+  String get accountLabel => 'Akun';
+
+  @override
+  String get signedInWithGoogle => 'Masuk dengan Google';
+
+  @override
+  String get signedInWithEmail => 'Masuk dengan email';
+
+  @override
   String get freqOnce => 'Sekali';
 
   @override

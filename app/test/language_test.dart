@@ -64,12 +64,12 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Family').last);
     await tester.pumpAndSettle();
-    await _tap(tester, _button('Family settings'));
+    await _tap(tester, find.bySemanticsLabel('Settings'));
     await _tap(tester, find.text('Bahasa Indonesia'));
     await _tap(tester, _button('Save'));
 
     expect((await repo.familySettings(familyId)).locale, 'id');
-    expect(_button('Pengaturan keluarga'), findsOneWidget);
+    expect(find.bySemanticsLabel('Pengaturan'), findsOneWidget);
   });
 
   test('keluarga baru memakai bahasa pilihan app, template ikut bahasa itu', () async {

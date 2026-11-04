@@ -5,6 +5,7 @@ import '../../core/theme/app_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/theme/typography.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/icon_circle_button.dart';
 import '../../core/widgets/invite_code_card.dart';
 import '../../core/widgets/list_row_pill.dart';
 import '../../core/widgets/member_avatar.dart';
@@ -136,7 +137,16 @@ class _FamilyPageState extends State<FamilyPage> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(AppSpace.screenX, 16, AppSpace.screenX, 32),
             children: staggered([
-              Text(context.s.navFamily, style: AppText.displayLg),
+              Row(
+                children: [
+                  Expanded(child: Text(context.s.navFamily, style: AppText.displayLg)),
+                  IconCircleButton(
+                    icon: AppIcons.gear,
+                    semanticLabel: context.s.settings,
+                    onPressed: () => context.push('/parent/family/settings'),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
               if (snapshot.hasError)
                 Text(
@@ -194,20 +204,6 @@ class _FamilyPageState extends State<FamilyPage> {
                   onPressed: () => _showInvite(role: MemberRole.admin),
                 ),
               ],
-              const SizedBox(height: 40),
-              AppButton(
-                label: context.s.familySettings,
-                icon: AppIcons.gear,
-                variant: AppButtonVariant.secondary,
-                onPressed: () => context.push('/parent/family/settings'),
-              ),
-              const SizedBox(height: 12),
-              AppButton(
-                label: context.s.signOut,
-                variant: AppButtonVariant.destructive,
-                icon: AppIcons.signOut,
-                onPressed: () => _session.signOut(),
-              ),
             ]),
           );
         },

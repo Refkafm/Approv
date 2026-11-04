@@ -1192,6 +1192,15 @@ class SEn extends S {
   String get tapToUndo => 'tap to undo';
 
   @override
+  String get accountLabel => 'Account';
+
+  @override
+  String get signedInWithGoogle => 'Signed in with Google';
+
+  @override
+  String get signedInWithEmail => 'Signed in with email';
+
+  @override
   String get freqOnce => 'Once';
 
   @override

@@ -8,13 +8,13 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   @override
   Future<AuthUser?> currentUser() async => _user;
 
-  void _signIn({required bool anonymous}) {
-    _user = AuthUser(id: _id(anonymous ? 'anon' : 'user'), isAnonymous: anonymous);
+  void _signIn({required bool anonymous, String? email, String? provider}) {
+    _user = AuthUser(id: _id(anonymous ? 'anon' : 'user'), isAnonymous: anonymous, email: email, provider: provider);
     _auth.add(null);
   }
 
   @override
-  Future<void> signInWithGoogle() async => _signIn(anonymous: false);
+  Future<void> signInWithGoogle() async => _signIn(anonymous: false, email: 'demo@gmail.com', provider: 'google');
 
   @override
   Future<void> signInWithApple() async => _signIn(anonymous: false);
@@ -22,7 +22,7 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   @override
   Future<void> signInWithEmail(String email, String password) async {
     if (_emailAccounts[email.toLowerCase()] != password) throw const AppException('invalid_login');
-    _signIn(anonymous: false);
+    _signIn(anonymous: false, email: email.toLowerCase(), provider: 'email');
   }
 
   @override
@@ -31,7 +31,7 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
     if (_emailAccounts.containsKey(key)) throw const AppException('email_taken');
     if (password.length < 6) throw const AppException('weak_password');
     _emailAccounts[key] = password;
-    _signIn(anonymous: false);
+    _signIn(anonymous: false, email: key, provider: 'email');
     return true;
   }
 
@@ -53,7 +53,7 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   void debugOpenRecoveryLink(String email) {
     _recoveryEmail = email.toLowerCase();
     _recovery.add(null);
-    _signIn(anonymous: false);
+    _signIn(anonymous: false, email: _recoveryEmail, provider: 'email');
   }
 
   @override
@@ -64,7 +64,7 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
     }
     if (newPassword.length < 6) throw const AppException('weak_password');
     _emailAccounts[key] = newPassword;
-    _signIn(anonymous: false);
+    _signIn(anonymous: false, email: key, provider: 'email');
   }
 
   @override

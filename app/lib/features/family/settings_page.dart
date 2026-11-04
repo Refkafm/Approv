@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/theme/typography.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/list_row_pill.dart';
 import '../../core/widgets/pill_chip.dart';
 import '../../data/app_exception.dart';
+import '../../data/models.dart';
 import '../../data/settings_models.dart';
 import '../onboarding/onboarding_scaffold.dart';
 import '../shell/session.dart';
 import '../../l10n/strings.dart';
 
-/// Pengaturan keluarga (PRD R-02, layar O-14): nama, zona waktu, bahasa, jam tidur notifikasi,
-/// aturan penalti & bonus streak.
+/// Pengaturan (PRD R-02, layar O-14): akun yang sedang masuk, pengaturan keluarga (nama, zona waktu,
+/// bahasa, jam tidur notifikasi, aturan penalti & bonus streak), dan tombol keluar.
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -88,6 +91,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final session = SessionScope.of(context);
     final s = _settings;
     if (s == null) {
       return OnboardingScaffold(title: context.s.settings, onBack: () => context.pop(), children: const []);
@@ -96,6 +100,12 @@ class _SettingsPageState extends State<SettingsPage> {
       title: context.s.settings,
       onBack: _busy ? null : () => context.pop(),
       children: [
+        Text(context.s.accountLabel, style: AppText.titleLg),
+        const SizedBox(height: 10),
+        _AccountRow(user: session.user),
+        const SizedBox(height: 32),
+        Text(context.s.navFamily, style: AppText.titleLg),
+        const SizedBox(height: 14),
         AppTextField(label: context.s.familyNameLabel, controller: _name, maxLength: 60),
         const SizedBox(height: 24),
         _Label(context.s.timezoneLabel),
@@ -192,7 +202,40 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 28),
         AppButton(label: _busy ? context.s.saving : context.s.save, onPressed: _busy ? null : _save),
         FormError(_error),
+        const SizedBox(height: 40),
+        AppButton(
+          label: context.s.signOut,
+          variant: AppButtonVariant.destructive,
+          icon: AppIcons.signOut,
+          onPressed: _busy ? null : session.signOut,
+        ),
       ],
+    );
+  }
+}
+
+/// Email akun yang sedang masuk dan cara masuknya.
+class _AccountRow extends StatelessWidget {
+  const _AccountRow({required this.user});
+
+  final AuthUser? user;
+
+  @override
+  Widget build(BuildContext context) {
+    final google = user?.provider == 'google';
+    return ListRowPill(
+      title: user?.email ?? '-',
+      subtitle: google ? context.s.signedInWithGoogle : context.s.signedInWithEmail,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.ink, width: AppStroke.width),
+        ),
+        child: Icon(google ? AppIcons.googleLogo : AppIcons.envelope, size: 20, color: AppColors.ink),
+      ),
     );
   }
 }

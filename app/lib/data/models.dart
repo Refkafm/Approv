@@ -4,9 +4,13 @@ library;
 import '../l10n/strings.dart';
 
 class AuthUser {
-  const AuthUser({required this.id, required this.isAnonymous});
+  const AuthUser({required this.id, required this.isAnonymous, this.email, this.provider});
 
   final String id;
+
+  /// Untuk bagian Akun di Pengaturan. [provider]: 'email' / 'google' (Supabase app_metadata).
+  final String? email;
+  final String? provider;
 
   /// Anak masuk dengan sesi anonim (tanpa email/nomor HP), PRD A-04.
   final bool isAnonymous;

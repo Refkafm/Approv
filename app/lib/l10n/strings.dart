@@ -408,6 +408,9 @@ abstract class S {
   String get noTransactions;
   String get goalSavings;
   String get tapToUndo;
+  String get accountLabel;
+  String get signedInWithGoogle;
+  String get signedInWithEmail;
   String get freqOnce;
   String get freqDaily;
   String get freqDaysOfWeek;

@@ -75,7 +75,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('Keluarga').last);
     await tester.pumpAndSettle();
-    await _tap(tester, _button('Pengaturan keluarga'));
+    await _tap(tester, find.bySemanticsLabel('Pengaturan'));
+    // Bagian akun: email & cara masuk
+    expect(find.text('Akun'), findsOneWidget);
 
     await tester.enterText(
       find.descendant(
@@ -92,6 +94,6 @@ void main() {
     expect(saved.name, 'Keluarga Baru');
     expect(saved.timezone, 'Asia/Makassar');
     expect(saved.streakBonusPct, 20);
-    expect(_button('Pengaturan keluarga'), findsOneWidget);
+    expect(find.bySemanticsLabel('Pengaturan'), findsOneWidget);
   });
 }

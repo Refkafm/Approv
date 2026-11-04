@@ -9,7 +9,13 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
   @override
   Future<AuthUser?> currentUser() async {
     final user = _client.auth.currentUser;
-    return user == null ? null : AuthUser(id: user.id, isAnonymous: user.isAnonymous);
+    if (user == null) return null;
+    return AuthUser(
+      id: user.id,
+      isAnonymous: user.isAnonymous,
+      email: user.email,
+      provider: user.appMetadata['provider'] as String?,
+    );
   }
 
   Future<void>? _googleInit;

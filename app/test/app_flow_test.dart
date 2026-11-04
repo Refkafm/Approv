@@ -208,7 +208,7 @@ void main() {
     await repo.signInWithEmail('ibu@contoh.com', 'baru123');
   });
 
-  testWidgets('keluar dari tab Keluarga kembali ke layar awal', (tester) async {
+  testWidgets('Keluarga hanya berisi anggota; akun & tombol keluar ada di Pengaturan', (tester) async {
     final repo = FakeRepository();
     await repo.signInWithGoogle();
     await repo.createFamily(familyName: 'Keluarga Rina', ownerName: 'Ibu Rina');
@@ -216,6 +216,13 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Keluarga & pengaturan'));
     await tester.pumpAndSettle();
+    expect(find.text('Orang tua & pengasuh'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Ibu Rina'), 300, scrollable: find.byType(Scrollable).first);
+    expect(_button('Keluar'), findsNothing);
+
+    await _tap(tester, find.bySemanticsLabel('Pengaturan'));
+    expect(find.text('demo@gmail.com'), findsOneWidget);
+    expect(find.text('Masuk dengan Google'), findsOneWidget);
     await _tap(tester, _button('Keluar'));
     expect(find.text('Siapa yang pakai HP ini?'), findsOneWidget);
   });
