@@ -256,6 +256,33 @@ class SId extends S {
   String get haveAccount => 'Sudah punya akun?';
 
   @override
+  String get forgotPassword => 'Lupa kata sandi?';
+
+  @override
+  String get resetTitle => 'Atur ulang kata sandi';
+
+  @override
+  String get resetSubtitle => 'Masukkan email akunmu. Kami kirim kode untuk membuat kata sandi baru.';
+
+  @override
+  String get resetCodeTitle => 'Cek email kamu';
+
+  @override
+  String resetCodeSubtitle(String email) => 'Kalau $email terdaftar, kode sudah dikirim ke sana. Cek juga folder spam.';
+
+  @override
+  String get resetCodeLabel => 'Kode dari email';
+
+  @override
+  String get newPassword => 'Kata sandi baru';
+
+  @override
+  String get saveNewPassword => 'Simpan & masuk';
+
+  @override
+  String demoResetCode(String code) => 'Mode demo: kodenya selalu $code.';
+
+  @override
   String get navHome => 'Beranda';
 
   @override

@@ -6,7 +6,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(107);
+select plan(114);
 
 -- =====================================================================
 -- Helper
@@ -404,6 +404,35 @@ select is((select count(*)::int from cron.job where jobname = 'send-push'), 1, '
 select is((select count(*)::int from pg_publication_tables
             where pubname = 'supabase_realtime' and tablename in ('tasks', 'members')), 2,
           'tugas & anggota ikut realtime');
+
+-- =====================================================================
+-- 12c. Teks dari server mengikuti bahasa keluarga
+-- =====================================================================
+
+select is((select locale from families where id = tests.id('fam')), 'id', 'bahasa keluarga bawaan: Indonesia');
+select tests.save('fam_en', tests.as_user('luar', $$ select create_family('Smith family', 'Mom', 'Asia/Jakarta', 'en') $$));
+select is((select locale from families where id = tests.id('fam_en')), 'en', 'keluarga baru memakai bahasa pilihan app');
+select tests.as_user('luar', format($$ select apply_economy_template(%L, '10-13') $$, tests.id('fam_en')));
+select is((select count(*)::int from tasks where family_id = tests.id('fam_en') and title = 'Make the bed'), 1,
+          'template tugas dalam bahasa Inggris');
+select is((select title from rewards where family_id = tests.id('fam_en') and type = 'goal'),
+          'Dinner at a favorite restaurant', 'template goal dalam bahasa Inggris');
+
+select tests.save('kid_en', tests.as_user('luar', format(
+  $$ insert into members (family_id, role, name) values (%L, 'member', 'Sam') returning id $$, tests.id('fam_en'))));
+with sub as (
+  insert into task_submissions (task_id, member_id, family_id, points_snapshot, for_date)
+  select id, tests.id('kid_en'), tests.id('fam_en'), 50, current_date
+    from tasks where family_id = tests.id('fam_en') and title = 'Help wash the dishes'
+  returning id)
+insert into tests.ids select 'sub_en', id::text from sub;
+select is((select title from notifications where ref_id = tests.id('sub_en') and kind = 'submission_pending'),
+          'New report', 'notifikasi laporan dalam bahasa Inggris');
+select tests.as_user('luar', format($$ select review_submission(%L, 'approve', null, 20) $$, tests.id('sub_en')));
+select is((select title from notifications where ref_id = tests.id('sub_en') and kind = 'submission_approved'),
+          '+50 points!', 'notifikasi disetujui dalam bahasa Inggris');
+select ok((select reason is null from point_transactions where ref_id = tests.id('sub_en') and type = 'bonus'),
+          'bonus tanpa alasan disimpan tanpa teks (app yang menerjemahkan)');
 
 -- =====================================================================
 -- 13. Ledger, kepemilikan, hapus keluarga

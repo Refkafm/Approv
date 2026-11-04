@@ -3,8 +3,25 @@ import 'reward_models.dart';
 import 'task_models.dart';
 
 /// Salinan template ekonomi dari RPC apply_economy_template, hanya untuk FakeRepository.
-/// Bila template di SQL berubah, ubah juga di sini.
+/// Bila template di SQL berubah, ubah juga di sini. Judul mengikuti bahasa keluarga ([_en]).
 abstract final class EconomyTemplate {
+  static const _en = {
+    'Rapikan kasur': 'Make the bed',
+    'Bantu cuci piring': 'Help wash the dishes',
+    'Baca buku 30 menit': 'Read a book for 30 minutes',
+    'PR selesai tanpa disuruh': 'Homework done without being asked',
+    'Bersihkan kamar': 'Clean the bedroom',
+    'Nilai ujian ≥ 85': 'Test score ≥ 85',
+    'Mainan baru': 'New toy',
+    'Makan di restoran favorit': 'Dinner at a favorite restaurant',
+    'Top-up game': 'Game top-up',
+    '30 menit main game': '30 minutes of gaming',
+    '30 menit TikTok / YouTube': '30 minutes of TikTok / YouTube',
+    'Pilih menu makan malam': "Pick what's for dinner",
+  };
+
+  static String _title(String id, String locale) => locale == 'en' ? _en[id]! : id;
+
   static const _baseTasks = [
     TaskInput(
       title: 'Rapikan kasur',
@@ -60,10 +77,10 @@ abstract final class EconomyTemplate {
 
   static int _round5(num value) => ((value / 5).round() * 5).clamp(5, 1 << 30).toInt();
 
-  static List<TaskInput> tasks(AgeBand band) => [
+  static List<TaskInput> tasks(AgeBand band, {String locale = 'id'}) => [
     for (final t in _baseTasks)
       TaskInput(
-        title: t.title,
+        title: _title(t.title, locale),
         icon: t.icon,
         points: _round5(t.points * _factor(band)),
         frequency: t.frequency,
@@ -73,7 +90,7 @@ abstract final class EconomyTemplate {
       ),
   ];
 
-  static List<RewardInput> rewards(AgeBand band) {
+  static List<RewardInput> rewards(AgeBand band, {String locale = 'id'}) {
     final screen = band.screenTimePrice;
     final goal = switch (band) {
       AgeBand.young => const RewardInput(title: 'Mainan baru', icon: 'gift', cost: 2000, type: RewardType.goal),
@@ -87,7 +104,7 @@ abstract final class EconomyTemplate {
     };
     return [
       RewardInput(
-        title: '30 menit main game',
+        title: _title('30 menit main game', locale),
         icon: 'game',
         cost: screen,
         type: RewardType.instant,
@@ -95,7 +112,7 @@ abstract final class EconomyTemplate {
         maxPerDay: 2,
       ),
       RewardInput(
-        title: '30 menit TikTok / YouTube',
+        title: _title('30 menit TikTok / YouTube', locale),
         icon: 'phone',
         cost: screen,
         type: RewardType.instant,
@@ -103,13 +120,13 @@ abstract final class EconomyTemplate {
         maxPerDay: 2,
       ),
       RewardInput(
-        title: 'Pilih menu makan malam',
+        title: _title('Pilih menu makan malam', locale),
         icon: 'food',
         cost: _round5(screen * 0.5),
         type: RewardType.instant,
         maxPerDay: 1,
       ),
-      goal,
+      RewardInput(title: _title(goal.title, locale), icon: goal.icon, cost: goal.cost, type: goal.type),
     ];
   }
 }

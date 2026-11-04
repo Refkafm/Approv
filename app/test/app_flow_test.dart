@@ -147,6 +147,37 @@ void main() {
     expect(find.text('Buat keluarga'), findsOneWidget);
   });
 
+  testWidgets('orang tua: lupa kata sandi, kode dari email, kata sandi baru langsung masuk', (tester) async {
+    final repo = FakeRepository();
+    await repo.signUpWithEmail('ayah@contoh.com', 'lama123');
+    await repo.signOut();
+    await _pumpApp(tester, repo);
+
+    await _tap(tester, _button('Saya orang tua'));
+    await _type(tester, 'Email', 'ayah@contoh.com');
+    await _tap(tester, find.text('Lupa kata sandi?'));
+    expect(find.text('Atur ulang kata sandi'), findsOneWidget);
+
+    // Email dari halaman Masuk sudah terisi
+    await _tap(tester, _button('Kirim kode'));
+    expect(find.text('Cek email kamu'), findsOneWidget);
+
+    await _type(tester, 'Kode dari email', '000000');
+    await _type(tester, 'Kata sandi baru', 'baru123');
+    await _type(tester, 'Ulangi kata sandi', 'baru123');
+    await _tap(tester, _button('Simpan & masuk'));
+    expect(find.text('Kodenya salah atau sudah kedaluwarsa.'), findsOneWidget);
+
+    await _type(tester, 'Kode dari email', FakeRepository.demoOtp);
+    await _tap(tester, _button('Simpan & masuk'));
+    expect(find.text('Buat keluarga'), findsOneWidget);
+
+    // Kata sandi lama tidak berlaku lagi
+    await repo.signOut();
+    await expectLater(repo.signInWithEmail('ayah@contoh.com', 'lama123'), throwsA(anything));
+    await repo.signInWithEmail('ayah@contoh.com', 'baru123');
+  });
+
   testWidgets('keluar dari tab Keluarga kembali ke layar awal', (tester) async {
     final repo = FakeRepository();
     await repo.signInWithGoogle();

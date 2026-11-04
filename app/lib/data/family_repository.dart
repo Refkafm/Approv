@@ -17,6 +17,12 @@ abstract interface class FamilyRepository {
   /// Mendaftarkan akun email. `false` jika server meminta konfirmasi email dulu (belum ada sesi).
   Future<bool> signUpWithEmail(String email, String password);
 
+  /// Mengirim kode atur ulang kata sandi ke email. Tidak memberi tahu apakah email terdaftar.
+  Future<void> sendPasswordReset(String email);
+
+  /// Memeriksa kode dari email, menyimpan kata sandi baru, lalu masuk.
+  Future<void> resetPassword({required String email, required String code, required String newPassword});
+
   /// [phone] dalam format internasional, mis. +6281234567890.
   Future<void> sendPhoneOtp(String phone);
   Future<void> verifyPhoneOtp(String phone, String code);
@@ -29,7 +35,8 @@ abstract interface class FamilyRepository {
   Future<List<Member>> myMemberships();
 
   /// Mengembalikan id keluarga baru. Pemanggil menjadi owner.
-  Future<String> createFamily({required String familyName, required String ownerName});
+  /// [locale] ('id' / 'en') menentukan bahasa template & notifikasi dari server.
+  Future<String> createFamily({required String familyName, required String ownerName, String locale = 'id'});
 
   Future<Member> addChild({required String familyId, required String name, String? avatar, DateTime? birthDate});
 

@@ -34,6 +34,27 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
     return res.session != null;
   });
 
+  // Kode ada di email "Reset Password" lewat {{ .Token }} (Supabase Auth > Email Templates).
+  @override
+  Future<void> sendPasswordReset(String email) =>
+      _guard(() => _emailAuth(() => _client.auth.resetPasswordForEmail(email, redirectTo: AppConfig.authRedirectUrl)));
+
+  @override
+  Future<void> resetPassword({required String email, required String code, required String newPassword}) =>
+      _guard(() async {
+        try {
+          await _client.auth.verifyOTP(type: OtpType.recovery, email: email, token: code);
+        } on AuthException {
+          throw const AppException('invalid_otp');
+        }
+        try {
+          await _emailAuth(() => _client.auth.updateUser(UserAttributes(password: newPassword)));
+        } on AppException catch (e) {
+          // Kata sandi baru sama dengan yang lama: tetap berhasil, sesi sudah masuk
+          if (e.code != 'same_password') rethrow;
+        }
+      });
+
   Future<T> _emailAuth<T>(Future<T> Function() run) async {
     try {
       return await run();
@@ -43,6 +64,8 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
         'email_not_confirmed' => 'email_not_confirmed',
         'user_already_exists' || 'email_exists' => 'email_taken',
         'weak_password' => 'weak_password',
+        'same_password' => 'same_password',
+        'over_email_send_rate_limit' || 'over_request_rate_limit' => 'rate_limited',
         'validation_failed' || 'email_address_invalid' => 'invalid_email',
         _ => 'auth_failed',
       });
@@ -88,17 +111,19 @@ mixin _SupabaseFamily on _SupabaseBase implements FamilyRepository {
   });
 
   @override
-  Future<String> createFamily({required String familyName, required String ownerName}) => _guard(() async {
-    final id = await _client.rpc(
-      'create_family',
-      params: {
-        'p_family_name': familyName,
-        'p_owner_name': ownerName,
-        'p_timezone': indonesianTimezoneFor(DateTime.now().timeZoneOffset),
-      },
-    );
-    return id as String;
-  });
+  Future<String> createFamily({required String familyName, required String ownerName, String locale = 'id'}) =>
+      _guard(() async {
+        final id = await _client.rpc(
+          'create_family',
+          params: {
+            'p_family_name': familyName,
+            'p_owner_name': ownerName,
+            'p_timezone': indonesianTimezoneFor(DateTime.now().timeZoneOffset),
+            'p_locale': locale,
+          },
+        );
+        return id as String;
+      });
 
   @override
   Future<Member> addChild({required String familyId, required String name, String? avatar, DateTime? birthDate}) =>

@@ -30,7 +30,7 @@ import 'features/wallet/child_detail_page.dart';
 import 'features/wallet/child_history_page.dart';
 
 /// Layar yang boleh dibuka sebelum punya keluarga.
-const _guestRoutes = {'/', '/login', '/login/register', '/join'};
+const _guestRoutes = {'/', '/login', '/login/register', '/login/forgot', '/join'};
 
 GoRouter buildRouter(SessionController session) {
   return GoRouter(
@@ -62,7 +62,13 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
         path: '/login',
         pageBuilder: (context, state) => fadeRisePage(state, const LoginPage()),
-        routes: [GoRoute(path: 'register', builder: (context, state) => const RegisterPage())],
+        routes: [
+          GoRoute(path: 'register', builder: (context, state) => const RegisterPage()),
+          GoRoute(
+            path: 'forgot',
+            builder: (context, state) => ForgotPasswordPage(initialEmail: state.extra as String?),
+          ),
+        ],
       ),
       GoRoute(path: '/join', pageBuilder: (context, state) => fadeRisePage(state, const JoinPage())),
       GoRoute(path: '/onboarding', pageBuilder: (context, state) => fadeRisePage(state, const OnboardingPage())),

@@ -81,7 +81,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
     // Tahan redirect: setelah keluarga dibuat, akun ini sudah "punya keluarga" tapi setup belum selesai
     _session.beginFlow();
     try {
-      _familyId = await _session.repository.createFamily(familyName: familyName, ownerName: ownerName);
+      _familyId = await _session.repository.createFamily(
+        familyName: familyName,
+        ownerName: ownerName,
+        locale: _session.language,
+      );
     } on AppException {
       await _session.finishFlow();
       rethrow;

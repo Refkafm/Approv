@@ -36,6 +36,20 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   }
 
   @override
+  Future<void> sendPasswordReset(String email) async {}
+
+  @override
+  Future<void> resetPassword({required String email, required String code, required String newPassword}) async {
+    final key = email.toLowerCase();
+    if (code != FakeRepository.demoOtp || !_emailAccounts.containsKey(key)) {
+      throw const AppException('invalid_otp');
+    }
+    if (newPassword.length < 6) throw const AppException('weak_password');
+    _emailAccounts[key] = newPassword;
+    _signIn(anonymous: false);
+  }
+
+  @override
   Future<void> sendPhoneOtp(String phone) async {
     if (!RegExp(r'^\+62\d{8,13}$').hasMatch(phone)) throw const AppException('invalid_phone');
   }
@@ -66,12 +80,12 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   }
 
   @override
-  Future<String> createFamily({required String familyName, required String ownerName}) async {
+  Future<String> createFamily({required String familyName, required String ownerName, String locale = 'id'}) async {
     final user = _requireUser();
     if (user.isAnonymous) throw const AppException('account_required');
     final familyId = _id('family');
     _families[familyId] = 'Asia/Jakarta';
-    _settings[familyId] = FamilySettings(name: familyName);
+    _settings[familyId] = FamilySettings(name: familyName, locale: locale);
     final owner = Member(
       id: _id('member'),
       familyId: familyId,
@@ -102,11 +116,12 @@ mixin _FakeFamily on _FakeState implements FamilyRepository {
   @override
   Future<void> applyTemplate({required String familyId, required AgeBand band}) async {
     _requireAdmin(familyId);
-    for (final input in EconomyTemplate.tasks(band)) {
+    final locale = _settings[familyId]!.locale;
+    for (final input in EconomyTemplate.tasks(band, locale: locale)) {
       final id = _id('task');
       _tasks[id] = Task.fromInput(input, id: id, familyId: familyId);
     }
-    for (final input in EconomyTemplate.rewards(band)) {
+    for (final input in EconomyTemplate.rewards(band, locale: locale)) {
       final id = _id('reward');
       _rewards[id] = Reward.fromInput(input, id: id, familyId: familyId);
     }

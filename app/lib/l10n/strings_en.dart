@@ -259,6 +259,34 @@ class SEn extends S {
   String get haveAccount => 'Already have an account?';
 
   @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get resetTitle => 'Reset password';
+
+  @override
+  String get resetSubtitle => 'Enter your account email. We\'ll send a code to set a new password.';
+
+  @override
+  String get resetCodeTitle => 'Check your email';
+
+  @override
+  String resetCodeSubtitle(String email) =>
+      'If $email is registered, a code is on its way. Check your spam folder too.';
+
+  @override
+  String get resetCodeLabel => 'Code from email';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get saveNewPassword => 'Save & sign in';
+
+  @override
+  String demoResetCode(String code) => 'Demo mode: the code is always $code.';
+
+  @override
   String get navHome => 'Home';
 
   @override

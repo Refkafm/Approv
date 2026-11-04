@@ -112,7 +112,18 @@ class _LoginPageState extends State<LoginPage> with _AuthForm {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _signIn(),
         ),
-        const SizedBox(height: 20),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: busy ? null : () => context.push('/login/forgot', extra: _email.text.trim()),
+            style: TextButton.styleFrom(foregroundColor: AppColors.ink, minimumSize: const Size(48, 48)),
+            child: Text(
+              context.s.forgotPassword,
+              style: AppText.bodySm.copyWith(fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
         AppButton(label: busy ? context.s.checking : context.s.signIn, onPressed: busy ? null : _signIn),
         FormError(error),
         const SizedBox(height: 20),
@@ -289,6 +300,125 @@ class _RegisterPageState extends State<RegisterPage> with _AuthForm {
         Text(context.s.haveAccount, textAlign: TextAlign.center, style: AppText.body),
         const SizedBox(height: 10),
         AppButton(label: context.s.signIn, variant: AppButtonVariant.secondary, onPressed: busy ? null : _back),
+      ],
+    );
+  }
+}
+
+/// Lupa kata sandi: kirim kode ke email, lalu masukkan kode + kata sandi baru. Berhasil = langsung masuk.
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key, this.initialEmail});
+
+  final String? initialEmail;
+
+  @override
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> with _AuthForm {
+  late final _email = TextEditingController(text: widget.initialEmail);
+  final _code = TextEditingController();
+  final _password = TextEditingController();
+  final _repeat = TextEditingController();
+
+  /// Email tujuan kode; terisi = langkah kedua.
+  String? _sentTo;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _code.dispose();
+    _password.dispose();
+    _repeat.dispose();
+    super.dispose();
+  }
+
+  void _back() {
+    if (_sentTo != null) {
+      setState(() {
+        _sentTo = null;
+        error = null;
+      });
+    } else {
+      context.canPop() ? context.pop() : context.go('/login');
+    }
+  }
+
+  Future<void> _send() => run(() async {
+    final email = _sentTo ?? _validEmail(_email);
+    await SessionScope.read(context).repository.sendPasswordReset(email);
+    if (mounted) setState(() => _sentTo = email);
+  });
+
+  Future<void> _reset() => run(() async {
+    final code = _code.text.trim();
+    if (code.length < 6) throw const AppException('invalid_otp');
+    if (_password.text.length < 6) throw const AppException('weak_password');
+    if (_repeat.text != _password.text) throw const AppException('password_mismatch');
+    final session = SessionScope.read(context);
+    // Tahan redirect sampai kata sandi baru tersimpan (sesi sudah masuk setelah kode benar)
+    session.beginFlow();
+    try {
+      await session.repository.resetPassword(email: _sentTo!, code: code, newPassword: _password.text);
+    } finally {
+      await session.finishFlow();
+    }
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final codeStep = _sentTo != null;
+    return OnboardingScaffold(
+      title: codeStep ? context.s.resetCodeTitle : context.s.resetTitle,
+      subtitle: codeStep ? context.s.resetCodeSubtitle(_sentTo!) : context.s.resetSubtitle,
+      onBack: _back,
+      children: [
+        if (!codeStep) ...[
+          AppTextField(
+            label: context.s.emailLabel,
+            controller: _email,
+            hint: context.s.emailHint,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _send(),
+          ),
+          const SizedBox(height: 20),
+          AppButton(label: busy ? context.s.sending : context.s.sendCode, onPressed: busy ? null : _send),
+        ] else ...[
+          AppTextField(
+            label: context.s.resetCodeLabel,
+            controller: _code,
+            hint: '••••••',
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            maxLength: 8,
+            large: true,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            label: context.s.newPassword,
+            controller: _password,
+            hint: context.s.passwordHint,
+            obscureText: true,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            label: context.s.repeatPassword,
+            controller: _repeat,
+            obscureText: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _reset(),
+          ),
+          const SizedBox(height: 20),
+          AppButton(label: busy ? context.s.saving : context.s.saveNewPassword, onPressed: busy ? null : _reset),
+          const SizedBox(height: 12),
+          AppButton(label: context.s.resendCode, variant: AppButtonVariant.secondary, onPressed: busy ? null : _send),
+        ],
+        FormError(error),
+        if (codeStep && SessionScope.of(context).repository is FakeRepository)
+          DemoNote(context.s.demoResetCode(FakeRepository.demoOtp)),
       ],
     );
   }

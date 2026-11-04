@@ -3,6 +3,7 @@ import 'package:family_points/core/format.dart';
 import 'package:family_points/core/widgets/app_button.dart';
 import 'package:family_points/data/app_exception.dart';
 import 'package:family_points/data/fake/fake_repository.dart';
+import 'package:family_points/data/models.dart';
 import 'package:family_points/l10n/language_store.dart';
 import 'package:family_points/l10n/strings.dart';
 import 'package:family_points/l10n/strings_id.dart';
@@ -63,6 +64,18 @@ void main() {
 
     expect((await repo.familySettings(familyId)).locale, 'id');
     expect(_button('Pengaturan keluarga'), findsOneWidget);
+  });
+
+  test('keluarga baru memakai bahasa pilihan app, template ikut bahasa itu', () async {
+    final repo = FakeRepository();
+    await repo.signUpWithEmail('mom@example.com', 'secret1');
+    final familyId = await repo.createFamily(familyName: 'Smith family', ownerName: 'Mom', locale: 'en');
+    expect((await repo.familySettings(familyId)).locale, 'en');
+
+    await repo.applyTemplate(familyId: familyId, band: AgeBand.middle);
+    final titles = (await repo.listTasks(familyId)).map((t) => t.title);
+    expect(titles, contains('Make the bed'));
+    expect(titles, isNot(contains('Rapikan kasur')));
   });
 
   test('pesan error & angka mengikuti bahasa aktif', () {
